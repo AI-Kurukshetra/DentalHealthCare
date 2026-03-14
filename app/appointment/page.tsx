@@ -1,34 +1,27 @@
+﻿import { redirect } from 'next/navigation';
 import { SectionHeading } from '../../components/SectionHeading';
 import { AppointmentForm } from '../../components/AppointmentForm';
+import { supabaseServerClient } from '../../lib/supabaseServerClient';
 
-export default function AppointmentPage() {
+export default async function AppointmentPage() {
+  const supabase = await supabaseServerClient();
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect('/login?redirectedFrom=/appointment');
+  }
+
   return (
     <main>
-      <section className="section">
-        <div className="appointment">
-          <div>
-            <SectionHeading
-              eyebrow="Appointment Booking"
-              title="Schedule a demo or patient consultation"
-              subtitle="Connect your Supabase database to start capturing real appointments instantly."
-            />
-            <div className="appointment-benefits">
-              <div>
-                <h4>Realtime availability</h4>
-                <p>Sync provider schedules and chair availability across locations.</p>
-              </div>
-              <div>
-                <h4>Smart patient intake</h4>
-                <p>Securely collect medical history, insurance, and consent forms.</p>
-              </div>
-              <div>
-                <h4>Automated confirmations</h4>
-                <p>Send SMS and email confirmations with no extra tools.</p>
-              </div>
-            </div>
-          </div>
-          <AppointmentForm />
-        </div>
+      <section className="section appointment-page-shell">
+        <SectionHeading
+          eyebrow="Appointment Booking"
+          title="Schedule your next dental visit"
+          subtitle="Choose a date, review live availability, and confirm your appointment in one secure booking flow."
+        />
+        <AppointmentForm />
       </section>
     </main>
   );

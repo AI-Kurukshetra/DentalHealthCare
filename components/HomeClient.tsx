@@ -81,9 +81,9 @@ export function HomeClient() {
 
       <section className="section">
         <SectionHeading
-          eyebrow="Highlights"
-          title="Essential workflows, orchestrated in one connected command center"
-          subtitle="Every module is designed to remove friction between teams and patients."
+          eyebrow="Core Features"
+          title="Core Features"
+          subtitle="Dental Practice Management systems streamline operations for dental offices by integrating patient records, scheduling, billing, treatment planning, and compliance management into unified cloud-based platforms. The market opportunity is significant as dental practices increasingly seek modern, efficient solutions to replace legacy systems and improve patient care while reducing administrative overhead."
         />
         <div className="feature-grid">
           {featureList.slice(0, 3).map((feature) => (
@@ -214,5 +214,6 @@ export function HomeClient() {
     </main>
   );
 }
+
 
 

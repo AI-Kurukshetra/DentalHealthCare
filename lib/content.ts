@@ -78,24 +78,19 @@ export const faqs = [
 
 export const featureList = [
   {
-    title: 'Unified Patient Records',
-    description: 'Centralized charts, imaging, notes, and treatment history with smart search.'
+    title: 'Patient Management System',
+    description:
+      'Complete patient profiles with medical history, contact information, insurance details, and treatment records.'
   },
   {
-    title: 'Smart Scheduling',
-    description: 'Automated chair allocation, online booking, and no-show prevention tools.'
+    title: 'Appointment Scheduling',
+    description:
+      'Drag-and-drop calendar with multi-provider support, recurring appointments, and availability management.'
   },
   {
-    title: 'Integrated Billing',
-    description: 'Claims, estimates, and patient payments connected to every appointment.'
-  },
-  {
-    title: 'Treatment Planning',
-    description: 'Visual plans, clinical templates, and one-click case acceptance tracking.'
-  },
-  {
-    title: 'Compliance Management',
-    description: 'Audit trails, task checklists, and secure document storage.'
+    title: 'Billing & Insurance',
+    description:
+      'Integrated claims, estimates, and payments with automated insurance eligibility checks.'
   }
 ];
 
@@ -119,3 +114,6 @@ export const blogFallback = [
     tag: 'Finance'
   }
 ];
+
+
+
