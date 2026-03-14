@@ -46,3 +46,4 @@ coverage/
 
 # Next/Telemetry
 .next/trace
+.vercel
