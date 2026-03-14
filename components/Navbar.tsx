@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -243,10 +243,7 @@ export function Navbar() {
                     initials || <User size={16} />
                   )}
                 </span>
-                <span className="nav-account-copy">
-                  <strong>{navUser.fullName}</strong>
-                  <span>{navUser.email}</span>
-                </span>
+
               </button>
               {accountOpen ? (
                 <div className="nav-account-menu">

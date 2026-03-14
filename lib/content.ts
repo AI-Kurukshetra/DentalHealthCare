@@ -80,17 +80,20 @@ export const featureList = [
   {
     title: 'Patient Management System',
     description:
-      'Complete patient profiles with medical history, contact information, insurance details, and treatment records.'
+      'Complete patient profiles with medical history, contact information, insurance details, and treatment records.',
+    iconKey: 'patients'
   },
   {
     title: 'Appointment Scheduling',
     description:
-      'Drag-and-drop calendar with multi-provider support, recurring appointments, and availability management.'
+      'Drag-and-drop calendar with multi-provider support, recurring appointments, and availability management.',
+    iconKey: 'schedule'
   },
   {
     title: 'Billing & Insurance',
     description:
-      'Integrated claims, estimates, and payments with automated insurance eligibility checks.'
+      'Integrated claims, estimates, and payments with automated insurance eligibility checks.',
+    iconKey: 'billing'
   }
 ];
 

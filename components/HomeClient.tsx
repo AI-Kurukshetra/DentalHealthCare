@@ -1,9 +1,11 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useEffect } from 'react';
-import { CalendarDays, FileText, Image as ImageIcon } from 'lucide-react';
+import { CalendarClock, CalendarDays, FileText, Image as ImageIcon, ReceiptText, UsersRound } from 'lucide-react';
 import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { LinkButton } from './Button';
 import { SectionHeading } from './SectionHeading';
 import { featureList, services, team, testimonials, blogFallback } from '../lib/content';
@@ -24,6 +26,11 @@ const processSteps = [
 ];
 
 const trustMarks = ['HIPAA-Aligned', 'SOC 2 Minded', '99.99% Uptime', '24/7 Support', 'US Data Residency'];
+const featureIconMap = {
+  patients: UsersRound,
+  schedule: CalendarClock,
+  billing: ReceiptText
+} as const;
 const spotlightServices = [
   {
     title: 'Dental Implants',
@@ -67,11 +74,28 @@ const spotlightServices = [
 
 export function HomeClient() {
   useEffect(() => {
-    gsap.from('.hero-eyebrow', { y: 16, opacity: 0, duration: 0.5, ease: 'power3.out' });
-    gsap.from('.hero-title', { y: 26, opacity: 0, duration: 0.7, delay: 0.1, ease: 'power3.out' });
-    gsap.from('.hero-subtitle', { y: 18, opacity: 0, duration: 0.6, delay: 0.2, ease: 'power3.out' });
-    gsap.from('.hero-actions', { y: 18, opacity: 0, duration: 0.6, delay: 0.3, ease: 'power3.out' });
-    gsap.from('.hero-photo', { x: -24, opacity: 0, duration: 0.8, delay: 0.2, ease: 'power3.out' });
+    gsap.registerPlugin(ScrollTrigger);
+
+    const ctx = gsap.context(() => {
+      gsap.from('.hero-eyebrow', { y: 16, opacity: 0, duration: 0.5, ease: 'power3.out' });
+      gsap.from('.hero-title', { y: 26, opacity: 0, duration: 0.7, delay: 0.1, ease: 'power3.out' });
+      gsap.from('.hero-subtitle', { y: 18, opacity: 0, duration: 0.6, delay: 0.2, ease: 'power3.out' });
+      gsap.from('.hero-actions', { y: 18, opacity: 0, duration: 0.6, delay: 0.3, ease: 'power3.out' });
+      gsap.from('.hero-photo', { x: -24, opacity: 0, duration: 0.8, delay: 0.2, ease: 'power3.out' });
+      gsap.from('.feature-showcase-card', {
+        y: 36,
+        opacity: 0,
+        duration: 0.8,
+        stagger: 0.12,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: '.feature-showcase-grid',
+          start: 'top 82%'
+        }
+      });
+    });
+
+    return () => ctx.revert();
   }, []);
 
   return (
@@ -99,9 +123,9 @@ export function HomeClient() {
       </section>
 
       <div className="hero-quick">
-        <button className="quick-action" type="button" aria-label="Appointments">
+        <Link className="quick-action" href="/appointment" aria-label="Appointments">
           <CalendarDays size={22} />
-        </button>
+        </Link>
         <button className="quick-action" type="button" aria-label="Gallery">
           <ImageIcon size={22} />
         </button>
@@ -124,6 +148,42 @@ export function HomeClient() {
         </div>
       </section>
 
+      <section className="welcome-showcase">
+        <div className="welcome-showcase-head">
+          <div className="welcome-showcase-badge">
+            <svg viewBox="0 0 64 64" aria-hidden="true">
+              <path d="M22 10c-6 0-10 4.8-10 11.2 0 3.6 1.1 7.1 2.9 10l4.8 7.8c1.3 2 2.1 4.3 2.4 6.7l.9 6.5c.1 1 .9 1.8 1.9 1.8h3.6c1 0 1.8-.8 1.9-1.8L32 42h0l1.6 11.1c.1 1 .9 1.8 1.9 1.8h3.6c1 0 1.8-.8 1.9-1.8l.9-6.5c.3-2.4 1.1-4.7 2.4-6.7l4.8-7.8c1.8-2.9 2.9-6.4 2.9-10C52 14.8 48 10 42 10c-3 0-5.3 1-7 2.9-1.7-1.9-4-2.9-7-2.9Z" />
+              <path d="M24 24c2-1.2 4.6-1.8 8-1.8s6 .6 8 1.8" />
+            </svg>
+            <span>NEW SMILES</span>
+          </div>
+          <h2>Welcome!</h2>
+        </div>
+        <div className="welcome-showcase-stage">
+          <article className="welcome-showcase-card">
+            <h3>We use advanced proven technology to keep your smile looking the best!</h3>
+            <p>
+              We are passionate about smiles and having the latest technology is one step we can take to help save yours!
+            </p>
+            <a className="welcome-showcase-button" href="/services">
+              Learn More
+            </a>
+          </article>
+          <div className="welcome-showcase-image">
+            <Image
+              src="/images/img.jpeg"
+              alt="Dental patient receiving treatment"
+              fill
+              sizes="(max-width: 900px) 100vw, 52vw"
+            />
+            <div className="welcome-showcase-play" aria-hidden="true">
+              <span />
+            </div>
+          </div>
+          <div className="welcome-showcase-accent" aria-hidden="true" />
+        </div>
+      </section>
+
       <section className="trust-strip">
         <p>Trusted by high-growth dental groups across 12 states</p>
         <div className="trust-grid">
@@ -133,21 +193,35 @@ export function HomeClient() {
         </div>
       </section>
 
-      <section className="section">
-        <SectionHeading
-          eyebrow="Core Features"
-          title="Core Features"
-          subtitle="Dental Practice Management systems streamline operations for dental offices by integrating patient records, scheduling, billing, treatment planning, and compliance management into unified cloud-based platforms. The market opportunity is significant as dental practices increasingly seek modern, efficient solutions to replace legacy systems and improve patient care while reducing administrative overhead."
-        />
-        <div className="feature-grid">
-          {featureList.slice(0, 3).map((feature) => (
-            <article key={feature.title} className="feature-card">
-              <h3>{feature.title}</h3>
-              <p>{feature.description}</p>
-            </article>
-          ))}
+      <section className="section feature-showcase">
+        <div className="feature-showcase-shell">
+          <SectionHeading
+            eyebrow="Core Features"
+            title="Connected tools for every patient touchpoint"
+            subtitle="The platform unifies front-desk coordination, clinical records, and revenue workflows into one clear operating system for modern dental teams."
+          />
+          <div className="feature-showcase-grid">
+            {featureList.slice(0, 4).map((feature, index) => {
+              const Icon = featureIconMap[feature.iconKey as keyof typeof featureIconMap] ?? FileText;
+
+              return (
+                <article key={feature.title} className="feature-showcase-card">
+                  <div className="feature-showcase-card-top">
+                    <span className="feature-showcase-icon" aria-hidden="true">
+                      <Icon size={24} />
+                    </span>
+                    <span className="feature-showcase-index">0{index + 1}</span>
+                  </div>
+                  <div className="feature-showcase-copy">
+                    <h3>{feature.title}</h3>
+                    <p>{feature.description}</p>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
         </div>
-        <div className="section-cta">
+        <div className="section-cta feature-showcase-cta">
           <LinkButton href="/features">See all features</LinkButton>
         </div>
       </section>

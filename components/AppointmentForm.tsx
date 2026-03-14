@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CalendarDays, Clock3, FileText, ShieldCheck, Stethoscope } from 'lucide-react';
 import { gsap } from 'gsap';
@@ -26,6 +26,7 @@ const slotOptions = [
 
 const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const defaultDoctorId = 'doctor-general';
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type UpcomingAppointment = {
   id: string;
@@ -96,10 +97,10 @@ function Calendar({
         </div>
         <div className="booking-calendar-nav">
           <button type="button" onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))}>
-            ‹
+            {'<'}
           </button>
           <button type="button" onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))}>
-            ›
+            {'>'}
           </button>
         </div>
       </div>
@@ -140,9 +141,12 @@ function Calendar({
 export function AppointmentForm() {
   const router = useRouter();
   const supabase = useMemo(() => supabaseBrowser(), []);
-  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedDate, setSelectedDate] = useState(() => toIsoDate(new Date()));
   const [selectedTime, setSelectedTime] = useState('');
   const [notes, setNotes] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [upcomingAppointments, setUpcomingAppointments] = useState<UpcomingAppointment[]>([]);
   const [patientId, setPatientId] = useState('');
@@ -152,10 +156,29 @@ export function AppointmentForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const bookingQueriesUnavailable = useRef(false);
+  const upcomingQueriesUnavailable = useRef(false);
+
+  const syncSlotState = (nextBookedSlots: string[]) => {
+    setBookedSlots(nextBookedSlots);
+    setSelectedTime((current) => {
+      if (current && !nextBookedSlots.includes(current)) {
+        return current;
+      }
+
+      return slotOptions.find((slot) => !nextBookedSlots.includes(slot)) || '';
+    });
+  };
 
   const loadBookedSlots = async (date: string) => {
     setLoadingSlots(true);
     setError('');
+
+    if (!isAuthenticated || bookingQueriesUnavailable.current) {
+      syncSlotState([]);
+      setLoadingSlots(false);
+      return;
+    }
 
     try {
       const { data, error: queryError } = await supabase
@@ -168,15 +191,19 @@ export function AppointmentForm() {
         throw queryError;
       }
 
-      setBookedSlots((data ?? []).map((item) => item.appointment_time).filter(Boolean));
+      syncSlotState((data ?? []).map((item) => item.appointment_time).filter(Boolean));
     } catch {
-      const { data: legacyData, error: legacyError } = await supabase.from('appointments').select('time').eq('date', date);
+      try {
+        const { data: legacyData, error: legacyError } = await supabase.from('appointments').select('time').eq('date', date);
 
-      if (legacyError) {
-        setError('Unable to load available time slots right now.');
-        setBookedSlots([]);
-      } else {
-        setBookedSlots((legacyData ?? []).map((item) => item.time).filter(Boolean));
+        if (legacyError) {
+          throw legacyError;
+        }
+
+        syncSlotState((legacyData ?? []).map((item) => item.time).filter(Boolean));
+      } catch {
+        bookingQueriesUnavailable.current = true;
+        syncSlotState([]);
       }
     } finally {
       setLoadingSlots(false);
@@ -184,6 +211,11 @@ export function AppointmentForm() {
   };
 
   const loadUpcomingAppointments = async (userId: string) => {
+    if (upcomingQueriesUnavailable.current) {
+      setUpcomingAppointments([]);
+      return;
+    }
+
     try {
       const today = toIsoDate(new Date());
       const { data, error: queryError } = await supabase
@@ -210,26 +242,35 @@ export function AppointmentForm() {
         }))
       );
     } catch {
-      const today = toIsoDate(new Date());
-      const { data: legacyData } = await supabase
-        .from('appointments')
-        .select('id,date,time,provider')
-        .eq('user_id', userId)
-        .gte('date', today)
-        .order('date', { ascending: true })
-        .order('time', { ascending: true })
-        .limit(4);
+      try {
+        const today = toIsoDate(new Date());
+        const { data: legacyData, error: legacyError } = await supabase
+          .from('appointments')
+          .select('id,date,time,provider')
+          .eq('user_id', userId)
+          .gte('date', today)
+          .order('date', { ascending: true })
+          .order('time', { ascending: true })
+          .limit(4);
 
-      setUpcomingAppointments(
-        (legacyData ?? []).map((item) => ({
-          id: item.id,
-          date: item.date,
-          time: item.time,
-          doctor: item.provider || 'General dentist',
-          status: 'scheduled',
-          notes: ''
-        }))
-      );
+        if (legacyError) {
+          throw legacyError;
+        }
+
+        setUpcomingAppointments(
+          (legacyData ?? []).map((item) => ({
+            id: item.id,
+            date: item.date,
+            time: item.time,
+            doctor: item.provider || 'General dentist',
+            status: 'scheduled',
+            notes: ''
+          }))
+        );
+      } catch {
+        upcomingQueriesUnavailable.current = true;
+        setUpcomingAppointments([]);
+      }
     }
   };
 
@@ -247,10 +288,24 @@ export function AppointmentForm() {
       }
 
       setIsAuthenticated(true);
+      setEmail(user.email ?? '');
 
-      const { data: profile } = await supabase.from('profiles').select('patient_id').eq('user_id', user.id).maybeSingle();
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('patient_id,full_name,email,phone')
+          .eq('user_id', user.id)
+          .maybeSingle();
 
-      setPatientId(profile?.patient_id || user.id);
+        setPatientId(profile?.patient_id || user.id);
+        setFullName(profile?.full_name || user.user_metadata?.full_name || user.user_metadata?.name || '');
+        setEmail(profile?.email || user.email || '');
+        setPhone(profile?.phone || '');
+      } catch {
+        setPatientId(user.id);
+        setFullName((user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || '');
+      }
+
       await loadUpcomingAppointments(user.id);
     };
 
@@ -269,36 +324,57 @@ export function AppointmentForm() {
 
   useEffect(() => {
     if (!selectedDate) return;
-    setSelectedTime('');
     loadBookedSlots(selectedDate);
-  }, [selectedDate]);
+  }, [isAuthenticated, selectedDate]);
+
+  useEffect(() => {
+    if (!selectedDate || selectedTime) return;
+    setSelectedTime(slotOptions.find((slot) => !bookedSlots.includes(slot)) || '');
+  }, [bookedSlots, selectedDate, selectedTime]);
+
+  const validateBooking = () => {
+    if (!selectedDate || !selectedTime) {
+      return 'Please select a date and an available time slot.';
+    }
+
+    if (!fullName.trim()) {
+      return 'Please enter your full name.';
+    }
+
+    if (!emailRegex.test(email.trim())) {
+      return 'Please enter a valid email address.';
+    }
+
+    if (!phone.trim()) {
+      return 'Please enter your phone number.';
+    }
+
+    return '';
+  };
 
   const handleBooking = async () => {
     setError('');
     setSuccess('');
 
-    if (!selectedDate || !selectedTime) {
-      setError('Please select a date and an available time slot.');
+    const validationError = validateBooking();
+    if (validationError) {
+      setError(validationError);
       return;
     }
+
+    setSubmitting(true);
 
     const {
       data: { user }
     } = await supabase.auth.getUser();
 
-    if (!user) {
-      setIsAuthenticated(false);
-      setError('Please log in to confirm this appointment.');
-      router.replace('/login?redirectedFrom=/appointment');
-      return;
+    if (user) {
+      setIsAuthenticated(true);
     }
 
-    setIsAuthenticated(true);
-    setSubmitting(true);
-
-    const bookingPayload = {
-      user_id: user.id,
-      patient_id: patientId || user.id,
+    const authPayload = {
+      user_id: user?.id,
+      patient_id: patientId || user?.id || null,
       appointment_date: selectedDate,
       appointment_time: selectedTime,
       doctor_id: doctorId,
@@ -310,31 +386,53 @@ export function AppointmentForm() {
       provider: 'General dentist'
     };
 
-    try {
-      const { error: insertError } = await supabase.from('appointments').insert(bookingPayload);
-      if (insertError) {
-        throw insertError;
-      }
-    } catch {
-      const { error: fallbackError } = await supabase.from('appointments').insert({
-        user_id: user.id,
-        date: selectedDate,
-        time: selectedTime,
-        type: 'Dental consultation',
-        provider: 'General dentist'
-      });
+    const publicPayload = {
+      name: fullName.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      preferred_date: selectedDate,
+      location: 'Main clinic',
+      notes: [selectedTime, notes.trim()].filter(Boolean).join(' | ')
+    };
 
-      if (fallbackError) {
-        setError('Unable to book the appointment. Please try again.');
-        setSubmitting(false);
-        return;
+    let bookingSaved = false;
+
+    if (user) {
+      const { error: insertError } = await supabase.from('appointments').insert(authPayload);
+      bookingSaved = !insertError;
+
+      if (!bookingSaved) {
+        const { error: fallbackAuthError } = await supabase.from('appointments').insert({
+          user_id: user.id,
+          date: selectedDate,
+          time: selectedTime,
+          type: 'Dental consultation',
+          provider: 'General dentist'
+        });
+
+        bookingSaved = !fallbackAuthError;
       }
+    }
+
+    if (!bookingSaved) {
+      const { error: publicInsertError } = await supabase.from('appointments').insert(publicPayload);
+      bookingSaved = !publicInsertError;
+    }
+
+    if (!bookingSaved) {
+      setError('Unable to book the appointment. Please check your details and try again.');
+      setSubmitting(false);
+      return;
     }
 
     setSuccess(`Appointment booked for ${formatLongDate(selectedDate)} at ${selectedTime}.`);
     setNotes('');
-    await loadBookedSlots(selectedDate);
-    await loadUpcomingAppointments(user.id);
+
+    if (user) {
+      await loadBookedSlots(selectedDate);
+      await loadUpcomingAppointments(user.id);
+    }
+
     setSubmitting(false);
   };
 
@@ -345,8 +443,7 @@ export function AppointmentForm() {
           <p className="section-kicker">Secure booking</p>
           <h3>Reserve a confirmed dental slot</h3>
           <p>
-            Live availability updates instantly. Browse available chair time first, then sign in only when you are ready
-            to confirm the visit.
+            Choose a slot, add your contact details, and save the appointment instantly from this booking page.
           </p>
         </div>
         <div className="appointment-hero-grid">
@@ -358,12 +455,12 @@ export function AppointmentForm() {
           <article>
             <Clock3 size={18} />
             <strong>Live slot status</strong>
-            <span>Booked times are automatically disabled.</span>
+            <span>Booked times are automatically disabled when live data is available.</span>
           </article>
           <article>
             <ShieldCheck size={18} />
-            <strong>Login on confirmation</strong>
-            <span>Anyone can explore availability. Sign in is required only to save the booking.</span>
+            <strong>Fast confirmation</strong>
+            <span>Save the booking directly with your contact information.</span>
           </article>
           <article>
             <FileText size={18} />
@@ -443,6 +540,38 @@ export function AppointmentForm() {
             </div>
           </div>
           <div className="confirm-actions">
+            <div className="appointment-contact-grid">
+              <label className="field" htmlFor="appointment-name">
+                <span>Full name</span>
+                <input
+                  id="appointment-name"
+                  type="text"
+                  value={fullName}
+                  onChange={(event) => setFullName(event.target.value)}
+                  placeholder="Enter your full name"
+                />
+              </label>
+              <label className="field" htmlFor="appointment-email">
+                <span>Email</span>
+                <input
+                  id="appointment-email"
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="you@clinic.com"
+                />
+              </label>
+              <label className="field" htmlFor="appointment-phone">
+                <span>Phone</span>
+                <input
+                  id="appointment-phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value)}
+                  placeholder="Enter your phone number"
+                />
+              </label>
+            </div>
             <label className="field appointment-notes-field" htmlFor="appointment-notes">
               <span>Notes</span>
               <textarea
@@ -453,16 +582,10 @@ export function AppointmentForm() {
                 placeholder="Add treatment concerns or booking notes for the dentist."
               />
             </label>
-            {!isAuthenticated ? (
-              <p className="section-kicker">
-                You can view dates and time slots without logging in. Login is required only when you confirm the
-                appointment.
-              </p>
-            ) : null}
             {error ? <p className="form-error">{error}</p> : null}
             {success ? <p className="form-success">{success}</p> : null}
             <Button type="button" onClick={handleBooking} disabled={submitting || !selectedDate || !selectedTime}>
-              {submitting ? 'Booking...' : isAuthenticated ? 'Book Appointment' : 'Login to Book Appointment'}
+              {submitting ? 'Booking...' : 'Book Appointment'}
             </Button>
           </div>
         </div>
@@ -477,7 +600,7 @@ export function AppointmentForm() {
             </div>
           </div>
           {!isAuthenticated ? (
-            <p className="appointment-empty-upcoming">Log in after choosing a slot to view your booked appointments.</p>
+            <p className="appointment-empty-upcoming">Book an appointment above or log in to view your saved appointments.</p>
           ) : upcomingAppointments.length ? (
             <div className="appointment-upcoming-list">
               {upcomingAppointments.map((item) => (

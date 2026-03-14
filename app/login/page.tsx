@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Lock, Mail } from 'lucide-react';
 import { supabaseBrowser } from '../../lib/supabaseClient';
@@ -13,7 +13,7 @@ type FieldErrors = {
   password?: string;
 };
 
-export default function LoginPage() {
+function LoginPageContent() {
   const searchParams = useSearchParams();
   const redirectTarget = searchParams.get('redirectedFrom') || '/dashboard';
   const supabase = useMemo(() => supabaseBrowser(), []);
@@ -180,5 +180,13 @@ export default function LoginPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageContent />
+    </Suspense>
   );
 }
