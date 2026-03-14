@@ -17,19 +17,32 @@ function LoginPageContent() {
   const searchParams = useSearchParams();
   const redirectTarget = searchParams.get('redirectedFrom') || '/dashboard';
   const supabase = useMemo(() => supabaseBrowser(), []);
+  const [mode, setMode] = useState<'login' | 'forgot'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [success, setSuccess] = useState('');
   const [errors, setErrors] = useState<FieldErrors>({});
   const [touched, setTouched] = useState<{ email: boolean; password: boolean }>({
     email: false,
-    password: false
+    password: false,
   });
 
-  const validate = () => {
+  const validateEmailOnly = () => {
+    const nextErrors: FieldErrors = {};
+
+    if (!email || !emailRegex.test(email)) {
+      nextErrors.email = 'Please enter a valid email address.';
+    }
+
+    setErrors((current) => ({ ...current, email: nextErrors.email, password: undefined }));
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const validateLogin = () => {
     const nextErrors: FieldErrors = {};
 
     if (!email || !emailRegex.test(email)) {
@@ -50,7 +63,7 @@ function LoginPageContent() {
     setSuccess('');
     setTouched({ email: true, password: true });
 
-    if (!validate()) {
+    if (!validateLogin()) {
       return;
     }
 
@@ -64,7 +77,7 @@ function LoginPageContent() {
 
     const { error: authError } = await client.auth.signInWithPassword({
       email,
-      password
+      password,
     });
 
     if (authError) {
@@ -74,7 +87,7 @@ function LoginPageContent() {
     }
 
     const {
-      data: { session }
+      data: { session },
     } = await client.auth.getSession();
 
     if (!session) {
@@ -83,13 +96,41 @@ function LoginPageContent() {
       return;
     }
 
-    if (rememberMe) {
-      setSuccess('Login successful. Redirecting...');
-    } else {
-      setSuccess('Login successful. Redirecting...');
+    setSuccess('Login successful. Redirecting...');
+    window.location.assign(redirectTarget.startsWith('/') ? redirectTarget : '/dashboard');
+  };
+
+  const handleForgotPassword = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setFormError('');
+    setSuccess('');
+    setTouched((current) => ({ ...current, email: true }));
+
+    if (!validateEmailOnly()) {
+      return;
     }
 
-    window.location.assign(redirectTarget.startsWith('/') ? redirectTarget : '/dashboard');
+    const client = supabase;
+    if (!client) {
+      setFormError('Authentication is not configured yet. Add Supabase environment variables and redeploy.');
+      return;
+    }
+
+    setForgotLoading(true);
+
+    const redirectTo =
+      typeof window !== 'undefined' ? `${window.location.origin}/reset-password` : undefined;
+
+    const { error } = await client.auth.resetPasswordForEmail(email.trim(), redirectTo ? { redirectTo } : undefined);
+
+    if (error) {
+      setFormError(error.message);
+      setForgotLoading(false);
+      return;
+    }
+
+    setSuccess('Password reset link sent. Check your email and open the link to create a new password.');
+    setForgotLoading(false);
   };
 
   return (
@@ -99,16 +140,22 @@ function LoginPageContent() {
           <div className="auth-media">
             <div className="auth-media-overlay">
               <p className="auth-brand">Dentora Cloud</p>
-              <h1>Welcome Back</h1>
-              <p>Log in to manage patients, appointments, and operations in one secure platform.</p>
+              <h1>{mode === 'login' ? 'Welcome Back' : 'Reset Your Password'}</h1>
+              <p>
+                {mode === 'login'
+                  ? 'Log in to manage patients, appointments, and operations in one secure platform.'
+                  : 'Enter your email and we will send a secure password reset link to your inbox.'}
+              </p>
             </div>
           </div>
           <div className="auth-content">
             <div className="auth-header">
-              <p className="auth-title">Welcome</p>
-              <p className="auth-subtitle">Login with email</p>
+              <p className="auth-title">{mode === 'login' ? 'Welcome' : 'Forgot Password'}</p>
+              <p className="auth-subtitle">
+                {mode === 'login' ? 'Login with email' : 'We will send you a recovery link'}
+              </p>
             </div>
-            <form className="auth-form" onSubmit={handleSubmit}>
+            <form className="auth-form" onSubmit={mode === 'login' ? handleSubmit : handleForgotPassword}>
               <label className="input-group">
                 <span className="input-icon" aria-hidden>
                   <Mail size={18} />
@@ -123,64 +170,118 @@ function LoginPageContent() {
                     if (touched.email) {
                       setErrors((prev) => ({
                         ...prev,
-                        email: emailRegex.test(event.target.value) ? undefined : 'Please enter a valid email address.'
+                        email: emailRegex.test(event.target.value) ? undefined : 'Please enter a valid email address.',
                       }));
                     }
                   }}
                   onBlur={() => {
                     setTouched((prev) => ({ ...prev, email: true }));
-                    validate();
+                    validateEmailOnly();
                   }}
                 />
               </label>
               {touched.email && errors.email ? <p className="auth-error">{errors.email}</p> : null}
 
-              <label className="input-group">
-                <span className="input-icon" aria-hidden>
-                  <Lock size={18} />
-                </span>
-                <input
-                  type="password"
-                  name="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(event) => {
-                    setPassword(event.target.value);
-                    if (touched.password) {
-                      setErrors((prev) => ({
-                        ...prev,
-                        password: event.target.value ? undefined : 'Please enter your password.'
-                      }));
-                    }
-                  }}
-                  onBlur={() => {
-                    setTouched((prev) => ({ ...prev, password: true }));
-                    validate();
-                  }}
-                />
-              </label>
-              {touched.password && errors.password ? <p className="auth-error">{errors.password}</p> : null}
+              {mode === 'login' ? (
+                <>
+                  <label className="input-group">
+                    <span className="input-icon" aria-hidden>
+                      <Lock size={18} />
+                    </span>
+                    <input
+                      type="password"
+                      name="password"
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(event) => {
+                        setPassword(event.target.value);
+                        if (touched.password) {
+                          setErrors((prev) => ({
+                            ...prev,
+                            password: event.target.value ? undefined : 'Please enter your password.',
+                          }));
+                        }
+                      }}
+                      onBlur={() => {
+                        setTouched((prev) => ({ ...prev, password: true }));
+                        validateLogin();
+                      }}
+                    />
+                  </label>
+                  {touched.password && errors.password ? <p className="auth-error">{errors.password}</p> : null}
 
-              <div className="auth-row">
-                <label className="auth-check">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(event) => setRememberMe(event.target.checked)}
-                  />
-                  Remember me
-                </label>
-                <Link href="/contact">Forgot password?</Link>
-              </div>
+                  <div className="auth-row">
+                    <label className="auth-check">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(event) => setRememberMe(event.target.checked)}
+                      />
+                      Remember me
+                    </label>
+                    <button
+                      type="button"
+                      className="auth-link-button"
+                      onClick={() => {
+                        setMode('forgot');
+                        setFormError('');
+                        setSuccess('');
+                      }}
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="auth-row auth-row-single">
+                  <button
+                    type="button"
+                    className="auth-link-button"
+                    onClick={() => {
+                      setMode('login');
+                      setFormError('');
+                      setSuccess('');
+                    }}
+                  >
+                    Back to login
+                  </button>
+                </div>
+              )}
+
               {formError ? <p className="auth-error">{formError}</p> : null}
               {success ? <p className="auth-success">{success}</p> : null}
-              <button className="auth-submit" type="submit" disabled={loading}>
-                {loading ? 'Please wait...' : 'Login'}
+              <button className="auth-submit" type="submit" disabled={loading || forgotLoading}>
+                {mode === 'login'
+                  ? loading
+                    ? 'Please wait...'
+                    : 'Login'
+                  : forgotLoading
+                    ? 'Sending link...'
+                    : 'Send reset link'}
               </button>
             </form>
             <div className="auth-footer">
-              <span>Don&apos;t have an account?</span>
-              <Link href="/signup">Register now</Link>
+              {mode === 'login' ? (
+                <>
+                  <span>Don&apos;t have an account?</span>
+                  <Link href="/signup">Register now</Link>
+                </>
+              ) : (
+                <>
+                  <span>Remembered your password?</span>
+                  <button
+                    type="button"
+                    className="auth-link-button"
+                    onClick={() => {
+                      setMode('login');
+                      setFormError('');
+                      setSuccess('');
+                    }}
+                  >
+                    Return to login
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -196,6 +297,3 @@ export default function LoginPage() {
     </Suspense>
   );
 }
-
-
-

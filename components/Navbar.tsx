@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import {
   Facebook,
@@ -86,6 +86,7 @@ const searchItems = [
 
 export function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const [supabase] = useState(() => supabaseBrowser());
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -219,6 +220,14 @@ export function Navbar() {
         .join("")
     : "";
 
+  const isActivePath = (href: string) => {
+    if (href === "/") {
+      return pathname === "/";
+    }
+
+    return pathname === href || pathname?.startsWith(`${href}/`);
+  };
+
   const handleLogout = async () => {
     const client = supabase;
     if (!client) {
@@ -346,11 +355,11 @@ export function Navbar() {
         </Link>
 
         <nav className="nav-links nav-item">
-          <Link className="nav-link active" href="/">
+          <Link className={`nav-link${isActivePath("/") ? " active" : ""}`} href="/">
             Home
           </Link>
           {navLinks.map((link) => (
-            <Link key={link.href} href={link.href} className="nav-link">
+            <Link key={link.href} href={link.href} className={`nav-link${isActivePath(link.href) ? " active" : ""}`}>
               {link.label}
             </Link>
           ))}
@@ -422,7 +431,7 @@ export function Navbar() {
       </div>
 
       <div ref={menuRef} className="mobile-menu" aria-hidden={!open} data-open={open}>
-        <Link className="mobile-link" href="/" onClick={() => setOpen(false)}>
+        <Link className={`mobile-link${isActivePath("/") ? " active" : ""}`} href="/" onClick={() => setOpen(false)}>
           Home
         </Link>
         {navLinks.map((link) => (
@@ -547,6 +556,10 @@ export function Navbar() {
     </header>
   );
 }
+
+
+
+
 
 
 
