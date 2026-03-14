@@ -212,13 +212,19 @@ export function DashboardClient() {
 
   useEffect(() => {
     const loadDashboard = async () => {
-      const { data: sessionData } = await supabase.auth.getSession();
+      const client = supabase;
+      if (!client) {
+        router.push('/login');
+        return;
+      }
+
+      const { data: sessionData } = await client.auth.getSession();
       if (!sessionData.session) {
         router.push('/login');
         return;
       }
 
-      const { data: profileRow } = await supabase
+      const { data: profileRow } = await client
         .from('profiles')
         .select(
           'full_name,patient_id,age,status,avatar_url,phone,email,address,emergency_contact,allergies,conditions,medications,past_treatments,insurance_provider,policy_number,coverage_status',
@@ -247,7 +253,7 @@ export function DashboardClient() {
         });
       }
 
-      const { data: upcoming } = await supabase
+      const { data: upcoming } = await client
         .from('appointments')
         .select('date,time,type,provider')
         .eq('user_id', sessionData.session.user.id)
@@ -265,7 +271,7 @@ export function DashboardClient() {
         );
       }
 
-      const { data: recentTreatments } = await supabase
+      const { data: recentTreatments } = await client
         .from('treatments')
         .select('date,procedure,tooth,provider')
         .eq('user_id', sessionData.session.user.id)
@@ -276,7 +282,7 @@ export function DashboardClient() {
         setTreatments(recentTreatments as TreatmentItem[]);
       }
 
-      const { data: billingData } = await supabase
+      const { data: billingData } = await client
         .from('billing_summary')
         .select('balance,last_payment,next_invoice')
         .eq('user_id', sessionData.session.user.id)
@@ -290,7 +296,7 @@ export function DashboardClient() {
         });
       }
 
-      const { data: alerts } = await supabase
+      const { data: alerts } = await client
         .from('notifications')
         .select('message')
         .eq('user_id', sessionData.session.user.id)
@@ -327,7 +333,13 @@ export function DashboardClient() {
   }, [currentSection]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    const client = supabase;
+    if (!client) {
+      router.push('/login');
+      return;
+    }
+
+    await client.auth.signOut();
     router.push('/login');
   };
 
@@ -1021,3 +1033,7 @@ export function DashboardClient() {
     </div>
   );
 }
+
+
+
+

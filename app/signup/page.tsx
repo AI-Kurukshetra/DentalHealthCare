@@ -54,9 +54,15 @@ export default function SignupPage() {
       return;
     }
 
+    const client = supabase;
+    if (!client) {
+      setError('Authentication is not configured yet. Add Supabase environment variables and redeploy.');
+      return;
+    }
+
     setLoading(true);
 
-    const { error: authError } = await supabase.auth.signUp({
+    const { error: authError } = await client.auth.signUp({
       email,
       password,
       options: {
@@ -182,4 +188,8 @@ export default function SignupPage() {
     </main>
   );
 }
+
+
+
+
 

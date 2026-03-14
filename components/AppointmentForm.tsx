@@ -179,7 +179,7 @@ export function AppointmentForm() {
     setLoadingSlots(true);
     setError('');
 
-    if (!isAuthenticated || bookingQueriesUnavailable.current) {
+    if (!supabase || !isAuthenticated || bookingQueriesUnavailable.current) {
       syncSlotState([]);
       setLoadingSlots(false);
       return;
@@ -245,7 +245,7 @@ export function AppointmentForm() {
   };
 
   const loadUpcomingAppointments = async (userId: string) => {
-    if (upcomingQueriesUnavailable.current) {
+    if (!supabase || upcomingQueriesUnavailable.current) {
       setUpcomingAppointments([]);
       return;
     }
@@ -312,6 +312,13 @@ export function AppointmentForm() {
     loadGuestAppointments();
 
     const bootstrap = async () => {
+      if (!supabase) {
+        setIsAuthenticated(false);
+        setPatientId('');
+        setUpcomingAppointments([]);
+        return;
+      }
+
       const {
         data: { user }
       } = await supabase.auth.getUser();
@@ -406,6 +413,11 @@ export function AppointmentForm() {
     const validationError = validateBooking();
     if (validationError) {
       setError(validationError);
+      return;
+    }
+
+    if (!supabase) {
+      setError('Booking service is not configured yet. Add Supabase environment variables and redeploy.');
       return;
     }
 
@@ -690,6 +702,7 @@ export function AppointmentForm() {
     </div>
   );
 }
+
 
 
 

@@ -125,9 +125,15 @@ export function Navbar() {
 
   useEffect(() => {
     const syncUser = async () => {
+      const client = supabase;
+      if (!client) {
+        setNavUser(null);
+        return;
+      }
+
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await client.auth.getUser();
 
       if (!user) {
         setNavUser(null);
@@ -145,7 +151,7 @@ export function Navbar() {
         avatarUrl: metadata.avatar_url ?? "",
       };
 
-      const { data: profile } = await supabase
+      const { data: profile } = await client
         .from("profiles")
         .select("full_name,avatar_url")
         .eq("user_id", user.id)
@@ -163,6 +169,10 @@ export function Navbar() {
     };
 
     syncUser();
+
+    if (!supabase) {
+      return;
+    }
 
     const {
       data: { subscription },
@@ -210,7 +220,15 @@ export function Navbar() {
     : "";
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    const client = supabase;
+    if (!client) {
+      setAccountOpen(false);
+      setOpen(false);
+      router.push('/login');
+      return;
+    }
+
+    await client.auth.signOut();
     setAccountOpen(false);
     setOpen(false);
     router.push("/login");
@@ -529,4 +547,8 @@ export function Navbar() {
     </header>
   );
 }
+
+
+
+
 

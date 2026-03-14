@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { Suspense, useMemo, useState } from 'react';
@@ -54,9 +54,15 @@ function LoginPageContent() {
       return;
     }
 
+    const client = supabase;
+    if (!client) {
+      setFormError('Authentication is not configured yet. Add Supabase environment variables and redeploy.');
+      return;
+    }
+
     setLoading(true);
 
-    const { error: authError } = await supabase.auth.signInWithPassword({
+    const { error: authError } = await client.auth.signInWithPassword({
       email,
       password
     });
@@ -69,7 +75,7 @@ function LoginPageContent() {
 
     const {
       data: { session }
-    } = await supabase.auth.getSession();
+    } = await client.auth.getSession();
 
     if (!session) {
       setFormError('Login succeeded but the session was not established. Please try again.');
@@ -190,3 +196,6 @@ export default function LoginPage() {
     </Suspense>
   );
 }
+
+
+
