@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -147,6 +147,7 @@ export function AppointmentForm() {
   const [upcomingAppointments, setUpcomingAppointments] = useState<UpcomingAppointment[]>([]);
   const [patientId, setPatientId] = useState('');
   const [doctorId] = useState(defaultDoctorId);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -169,10 +170,7 @@ export function AppointmentForm() {
 
       setBookedSlots((data ?? []).map((item) => item.appointment_time).filter(Boolean));
     } catch {
-      const { data: legacyData, error: legacyError } = await supabase
-        .from('appointments')
-        .select('time')
-        .eq('date', date);
+      const { data: legacyData, error: legacyError } = await supabase.from('appointments').select('time').eq('date', date);
 
       if (legacyError) {
         setError('Unable to load available time slots right now.');
@@ -242,22 +240,22 @@ export function AppointmentForm() {
       } = await supabase.auth.getUser();
 
       if (!user) {
-        router.replace('/login?redirectedFrom=/appointment');
+        setIsAuthenticated(false);
+        setPatientId('');
+        setUpcomingAppointments([]);
         return;
       }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('patient_id')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      setIsAuthenticated(true);
+
+      const { data: profile } = await supabase.from('profiles').select('patient_id').eq('user_id', user.id).maybeSingle();
 
       setPatientId(profile?.patient_id || user.id);
       await loadUpcomingAppointments(user.id);
     };
 
     bootstrap();
-  }, [router, supabase]);
+  }, [supabase]);
 
   useEffect(() => {
     gsap.from('.appointment-hero-card, .appointment-layout, .appointment-upcoming', {
@@ -289,10 +287,13 @@ export function AppointmentForm() {
     } = await supabase.auth.getUser();
 
     if (!user) {
+      setIsAuthenticated(false);
+      setError('Please log in to confirm this appointment.');
       router.replace('/login?redirectedFrom=/appointment');
       return;
     }
 
+    setIsAuthenticated(true);
     setSubmitting(true);
 
     const bookingPayload = {
@@ -344,8 +345,8 @@ export function AppointmentForm() {
           <p className="section-kicker">Secure booking</p>
           <h3>Reserve a confirmed dental slot</h3>
           <p>
-            Live availability updates instantly. Bookings are tied to your authenticated patient profile and saved in
-            Supabase.
+            Live availability updates instantly. Browse available chair time first, then sign in only when you are ready
+            to confirm the visit.
           </p>
         </div>
         <div className="appointment-hero-grid">
@@ -361,8 +362,8 @@ export function AppointmentForm() {
           </article>
           <article>
             <ShieldCheck size={18} />
-            <strong>Protected access</strong>
-            <span>Only logged-in patients can confirm visits.</span>
+            <strong>Login on confirmation</strong>
+            <span>Anyone can explore availability. Sign in is required only to save the booking.</span>
           </article>
           <article>
             <FileText size={18} />
@@ -452,10 +453,16 @@ export function AppointmentForm() {
                 placeholder="Add treatment concerns or booking notes for the dentist."
               />
             </label>
+            {!isAuthenticated ? (
+              <p className="section-kicker">
+                You can view dates and time slots without logging in. Login is required only when you confirm the
+                appointment.
+              </p>
+            ) : null}
             {error ? <p className="form-error">{error}</p> : null}
             {success ? <p className="form-success">{success}</p> : null}
             <Button type="button" onClick={handleBooking} disabled={submitting || !selectedDate || !selectedTime}>
-              {submitting ? 'Booking...' : 'Book Appointment'}
+              {submitting ? 'Booking...' : isAuthenticated ? 'Book Appointment' : 'Login to Book Appointment'}
             </Button>
           </div>
         </div>
@@ -469,7 +476,9 @@ export function AppointmentForm() {
               <h3>Your booked appointments</h3>
             </div>
           </div>
-          {upcomingAppointments.length ? (
+          {!isAuthenticated ? (
+            <p className="appointment-empty-upcoming">Log in after choosing a slot to view your booked appointments.</p>
+          ) : upcomingAppointments.length ? (
             <div className="appointment-upcoming-list">
               {upcomingAppointments.map((item) => (
                 <article key={item.id} className="appointment-upcoming-item">

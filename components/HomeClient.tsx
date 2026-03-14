@@ -24,6 +24,46 @@ const processSteps = [
 ];
 
 const trustMarks = ['HIPAA-Aligned', 'SOC 2 Minded', '99.99% Uptime', '24/7 Support', 'US Data Residency'];
+const spotlightServices = [
+  {
+    title: 'Dental Implants',
+    description: 'Dental implants are the closest you can get to healthy, beautiful and natural teeth.',
+    icon: (
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M22 10c-6 0-10 4.8-10 11.2 0 3.6 1.1 7.1 2.9 10l5 8.1c1.2 1.9 2 4 2.2 6.3L23.3 54c.1 1 .9 1.8 1.9 1.8h13.6c1 0 1.8-.8 1.9-1.8l1.2-8.4c.3-2.2 1-4.4 2.2-6.3l5-8.1c1.8-2.9 2.9-6.4 2.9-10C52 14.8 48 10 42 10c-3 0-5.3 1-7 2.9-1.7-1.9-4-2.9-7-2.9Z" />
+        <path d="M25 32h14" />
+        <path d="M27 37h10" />
+        <path d="M29 42h6" />
+        <path d="M32 27v23" />
+      </svg>
+    )
+  },
+  {
+    title: 'Parodontosis Care',
+    description: 'Timely diagnosed and treated parodontosis disease can save you from tooth loss.',
+    icon: (
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M22 10c-6 0-10 4.8-10 11.2 0 3.6 1.1 7.1 2.9 10l4.5 7.2c1.4 2.1 2.3 4.5 2.6 7l.8 6c.1 1 .9 1.7 1.9 1.7h3.8c1 0 1.8-.8 1.9-1.8l1.4-10.7h1.6L35 51.3c.1 1 .9 1.8 1.9 1.8h3.4c1 0 1.8-.7 1.9-1.7l.8-6c.3-2.5 1.2-4.9 2.6-7l4.5-7.2c1.8-2.9 2.9-6.4 2.9-10C53 14.8 49 10 43 10c-3 0-5.3 1-7 2.9-1.7-1.9-4-2.9-7-2.9Z" />
+        <path d="M21 25c4-2 8-2 12 0" />
+        <path d="M31 24c4-2 8-2 12 0" />
+        <circle cx="24" cy="31" r="1.5" />
+        <circle cx="31" cy="34" r="1.5" />
+        <circle cx="39" cy="30" r="1.5" />
+      </svg>
+    )
+  },
+  {
+    title: 'Teeth Whitening',
+    description: 'Teeth Whitening improve how your teeth look by removing stains and discoloration.',
+    icon: (
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M22 10c-6 0-10 4.8-10 11.2 0 3.6 1.1 7.1 2.9 10l4.8 7.8c1.3 2 2.1 4.3 2.4 6.7l.9 6.5c.1 1 .9 1.8 1.9 1.8h3.6c1 0 1.8-.8 1.9-1.8L32 42h0l1.6 11.1c.1 1 .9 1.8 1.9 1.8h3.6c1 0 1.8-.8 1.9-1.8l.9-6.5c.3-2.4 1.1-4.7 2.4-6.7l4.8-7.8c1.8-2.9 2.9-6.4 2.9-10C52 14.8 48 10 42 10c-3 0-5.3 1-7 2.9-1.7-1.9-4-2.9-7-2.9Z" />
+        <path d="m47 12 1.3 4.2L53 17.5l-4.7 1.3L47 23l-1.3-4.2L41 17.5l4.7-1.3L47 12Z" />
+        <path d="m18 18 .8 2.5L22 21.3l-3.2.8L18 24.5l-.8-2.4-3.2-.8 3.2-.8L18 18Z" />
+      </svg>
+    )
+  }
+];
 
 export function HomeClient() {
   useEffect(() => {
@@ -69,6 +109,20 @@ export function HomeClient() {
           <FileText size={22} />
         </button>
       </div>
+
+      <section className="service-highlight-strip">
+        <div className="service-highlight-shell">
+          {spotlightServices.map((service) => (
+            <article key={service.title} className="service-highlight-card">
+              <div className="service-highlight-icon">{service.icon}</div>
+              <div className="service-highlight-copy">
+                <h3>{service.title}</h3>
+                <p>{service.description}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
 
       <section className="trust-strip">
         <p>Trusted by high-growth dental groups across 12 states</p>
@@ -214,6 +268,3 @@ export function HomeClient() {
     </main>
   );
 }
-
-
-

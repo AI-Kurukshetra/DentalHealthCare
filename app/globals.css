@@ -1,4 +1,4 @@
-﻿.navbar {
+.navbar {
   position: sticky;
   top: 0;
   z-index: 20;
@@ -205,6 +205,62 @@
 
 .trust-strip {
   background: #f8fbfd;
+}
+.service-highlight-strip {
+  margin: 0 0 2rem;
+  background: linear-gradient(90deg, #47a9cf 0%, #45c7b7 100%);
+}
+
+.service-highlight-shell {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 4.4rem 6vw;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2.5rem;
+}
+
+.service-highlight-card {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 1.35rem;
+  align-items: start;
+  color: #fff;
+}
+
+.service-highlight-icon {
+  width: 92px;
+  height: 92px;
+  display: grid;
+  place-items: center;
+}
+
+.service-highlight-icon svg {
+  width: 74px;
+  height: 74px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.service-highlight-copy {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.service-highlight-copy h3 {
+  font-size: clamp(1.5rem, 2vw, 2rem);
+  line-height: 1.1;
+  color: #fff;
+}
+
+.service-highlight-copy p {
+  max-width: 19ch;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.96);
 }
 :root {
   color-scheme: light;
@@ -729,6 +785,38 @@ main {
   .hero-photo {
     min-height: 320px;
   }
+  .service-highlight-shell {
+    grid-template-columns: 1fr;
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+  .service-highlight-card {
+    grid-template-columns: 76px 1fr;
+  }
+  .service-highlight-icon {
+    width: 76px;
+    height: 76px;
+  }
+  .service-highlight-icon svg {
+    width: 62px;
+    height: 62px;
+  }
+  .service-highlight-shell {
+    grid-template-columns: 1fr;
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+  .service-highlight-card {
+    grid-template-columns: 76px 1fr;
+  }
+  .service-highlight-icon {
+    width: 76px;
+    height: 76px;
+  }
+  .service-highlight-icon svg {
+    width: 62px;
+    height: 62px;
+  }
   .nav-links {
     display: none;
   }
@@ -742,6 +830,14 @@ main {
 @media (max-width: 600px) {
   .section {
     padding: 4rem 6vw;
+  }
+
+  .service-highlight-copy p {
+    max-width: none;
+  }
+
+  .service-highlight-copy p {
+    max-width: none;
   }
 
   .hero {

@@ -1,18 +1,7 @@
-﻿import { redirect } from 'next/navigation';
 import { SectionHeading } from '../../components/SectionHeading';
 import { AppointmentForm } from '../../components/AppointmentForm';
-import { supabaseServerClient } from '../../lib/supabaseServerClient';
 
 export default async function AppointmentPage() {
-  const supabase = await supabaseServerClient();
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect('/login?redirectedFrom=/appointment');
-  }
-
   return (
     <main>
       <section className="section appointment-page-shell">
