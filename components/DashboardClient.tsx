@@ -224,6 +224,23 @@ export function DashboardClient() {
         return;
       }
 
+      const authUser = sessionData.session.user;
+      const authMetadata = authUser.user_metadata ?? {};
+      const authName =
+        authMetadata.full_name ??
+        authMetadata.name ??
+        authUser.email?.split('@')[0] ??
+        fallbackProfile.name;
+      const authAvatar = authMetadata.avatar_url ?? fallbackProfile.photo;
+
+      setProfile((current) => ({
+        ...current,
+        name: authName,
+        patientId: current.patientId === fallbackProfile.patientId ? authUser.id.slice(0, 8).toUpperCase() : current.patientId,
+        photo: authAvatar || current.photo,
+        email: authUser.email || current.email,
+      }));
+
       const { data: profileRow } = await client
         .from('profiles')
         .select(
@@ -233,24 +250,25 @@ export function DashboardClient() {
         .maybeSingle();
 
       if (profileRow) {
-        setProfile({
-          name: profileRow.full_name || fallbackProfile.name,
-          patientId: profileRow.patient_id || fallbackProfile.patientId,
-          age: profileRow.age || fallbackProfile.age,
-          status: profileRow.status || fallbackProfile.status,
-          photo: profileRow.avatar_url || fallbackProfile.photo,
-          phone: profileRow.phone || fallbackProfile.phone,
-          email: profileRow.email || fallbackProfile.email,
-          address: profileRow.address || fallbackProfile.address,
-          emergencyContact: profileRow.emergency_contact || fallbackProfile.emergencyContact,
-          allergies: profileRow.allergies || fallbackProfile.allergies,
-          conditions: profileRow.conditions || fallbackProfile.conditions,
-          medications: profileRow.medications || fallbackProfile.medications,
-          pastTreatments: profileRow.past_treatments || fallbackProfile.pastTreatments,
-          insuranceProvider: profileRow.insurance_provider || fallbackProfile.insuranceProvider,
-          policyNumber: profileRow.policy_number || fallbackProfile.policyNumber,
-          coverageStatus: profileRow.coverage_status || fallbackProfile.coverageStatus,
-        });
+        setProfile((current) => ({
+          ...current,
+          name: profileRow.full_name || current.name,
+          patientId: profileRow.patient_id || current.patientId,
+          age: profileRow.age || current.age,
+          status: profileRow.status || current.status,
+          photo: profileRow.avatar_url || current.photo,
+          phone: profileRow.phone || current.phone,
+          email: profileRow.email || current.email,
+          address: profileRow.address || current.address,
+          emergencyContact: profileRow.emergency_contact || current.emergencyContact,
+          allergies: profileRow.allergies || current.allergies,
+          conditions: profileRow.conditions || current.conditions,
+          medications: profileRow.medications || current.medications,
+          pastTreatments: profileRow.past_treatments || current.pastTreatments,
+          insuranceProvider: profileRow.insurance_provider || current.insuranceProvider,
+          policyNumber: profileRow.policy_number || current.policyNumber,
+          coverageStatus: profileRow.coverage_status || current.coverageStatus,
+        }));
       }
 
       const { data: upcoming } = await client
@@ -1033,6 +1051,7 @@ export function DashboardClient() {
     </div>
   );
 }
+
 
 
 
