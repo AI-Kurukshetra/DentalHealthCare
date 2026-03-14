@@ -1,7 +1,7 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+
 import { CalendarDays, Clock3, FileText, ShieldCheck, Stethoscope } from 'lucide-react';
 import { gsap } from 'gsap';
 import { supabaseBrowser } from '../lib/supabaseClient';
@@ -36,6 +36,8 @@ type UpcomingAppointment = {
   status: string;
   notes: string;
 };
+
+const guestAppointmentsStorageKey = 'guest-appointments';
 
 const toIsoDate = (date: Date) => {
   const year = date.getFullYear();
@@ -89,7 +91,7 @@ function Calendar({
   });
 
   return (
-    <div className="booking-calendar dash-section" aria-label="Appointment calendar">
+    <div className="booking-calendar appointment-section" aria-label="Appointment calendar">
       <div className="booking-calendar-header">
         <div>
           <p className="section-kicker">Calendar</p>
@@ -139,7 +141,6 @@ function Calendar({
 }
 
 export function AppointmentForm() {
-  const router = useRouter();
   const supabase = useMemo(() => supabaseBrowser(), []);
   const [selectedDate, setSelectedDate] = useState(() => toIsoDate(new Date()));
   const [selectedTime, setSelectedTime] = useState('');
@@ -149,6 +150,7 @@ export function AppointmentForm() {
   const [phone, setPhone] = useState('');
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [upcomingAppointments, setUpcomingAppointments] = useState<UpcomingAppointment[]>([]);
+  const [guestAppointments, setGuestAppointments] = useState<UpcomingAppointment[]>([]);
   const [patientId, setPatientId] = useState('');
   const [doctorId] = useState(defaultDoctorId);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -158,6 +160,9 @@ export function AppointmentForm() {
   const [success, setSuccess] = useState('');
   const bookingQueriesUnavailable = useRef(false);
   const upcomingQueriesUnavailable = useRef(false);
+  const formRef = useRef<HTMLDivElement | null>(null);
+
+  const visibleAppointments = isAuthenticated ? upcomingAppointments : guestAppointments;
 
   const syncSlotState = (nextBookedSlots: string[]) => {
     setBookedSlots(nextBookedSlots);
@@ -208,6 +213,35 @@ export function AppointmentForm() {
     } finally {
       setLoadingSlots(false);
     }
+  };
+
+  const persistGuestAppointments = (items: UpcomingAppointment[]) => {
+    if (typeof window === 'undefined') return;
+    window.sessionStorage.setItem(guestAppointmentsStorageKey, JSON.stringify(items));
+  };
+
+  const loadGuestAppointments = () => {
+    if (typeof window === 'undefined') return;
+
+    const stored = window.sessionStorage.getItem(guestAppointmentsStorageKey);
+    if (!stored) return;
+
+    try {
+      const parsed = JSON.parse(stored) as UpcomingAppointment[];
+      if (Array.isArray(parsed)) {
+        setGuestAppointments(parsed);
+      }
+    } catch {
+      window.sessionStorage.removeItem(guestAppointmentsStorageKey);
+    }
+  };
+
+  const addGuestAppointment = (item: UpcomingAppointment) => {
+    setGuestAppointments((current) => {
+      const nextAppointments = [item, ...current].slice(0, 4);
+      persistGuestAppointments(nextAppointments);
+      return nextAppointments;
+    });
   };
 
   const loadUpcomingAppointments = async (userId: string) => {
@@ -275,6 +309,8 @@ export function AppointmentForm() {
   };
 
   useEffect(() => {
+    loadGuestAppointments();
+
     const bootstrap = async () => {
       const {
         data: { user }
@@ -313,13 +349,24 @@ export function AppointmentForm() {
   }, [supabase]);
 
   useEffect(() => {
-    gsap.from('.appointment-hero-card, .appointment-layout, .appointment-upcoming', {
-      opacity: 0,
-      y: 22,
-      duration: 0.7,
-      stagger: 0.1,
-      ease: 'power3.out'
-    });
+    if (!formRef.current) return;
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        '.appointment-section',
+        { opacity: 0, y: 22 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.7,
+          stagger: 0.1,
+          ease: 'power3.out',
+          clearProps: 'opacity,transform'
+        }
+      );
+    }, formRef);
+
+    return () => ctx.revert();
   }, []);
 
   useEffect(() => {
@@ -426,19 +473,32 @@ export function AppointmentForm() {
     }
 
     setSuccess(`Appointment booked for ${formatLongDate(selectedDate)} at ${selectedTime}.`);
+
+    const bookedAppointment: UpcomingAppointment = {
+      id: `local-${Date.now()}`,
+      date: selectedDate,
+      time: selectedTime,
+      doctor: 'General dentist',
+      status: 'scheduled',
+      notes: notes.trim() || 'No notes added'
+    };
+
     setNotes('');
+    syncSlotState([...bookedSlots, selectedTime]);
 
     if (user) {
       await loadBookedSlots(selectedDate);
       await loadUpcomingAppointments(user.id);
+    } else {
+      addGuestAppointment(bookedAppointment);
     }
 
     setSubmitting(false);
   };
 
   return (
-    <div className="appointment-booking-shell">
-      <section className="appointment-hero-card dash-section">
+    <div ref={formRef} className="appointment-booking-shell">
+      <section className="appointment-hero-card appointment-section">
         <div>
           <p className="section-kicker">Secure booking</p>
           <h3>Reserve a confirmed dental slot</h3>
@@ -470,7 +530,9 @@ export function AppointmentForm() {
         </div>
       </section>
 
-      <section className="appointment-layout dash-section">
+
+
+      <section className="appointment-layout appointment-section">
         <div className="appointment-calendar-panel">
           <Calendar selectedDate={selectedDate} onSelect={setSelectedDate} />
         </div>
@@ -515,7 +577,7 @@ export function AppointmentForm() {
         </div>
       </section>
 
-      <section className="appointment-confirmation dash-section">
+      <section className="appointment-confirmation appointment-section">
         <div className="appointment-confirm-card">
           <div className="confirm-copy">
             <p className="section-kicker">Confirmation</p>
@@ -591,7 +653,7 @@ export function AppointmentForm() {
         </div>
       </section>
 
-      <section className="appointment-upcoming dash-section">
+      <section className="appointment-upcoming appointment-section">
         <div className="card appointment-upcoming-card">
           <div className="card-head">
             <div>
@@ -599,11 +661,9 @@ export function AppointmentForm() {
               <h3>Your booked appointments</h3>
             </div>
           </div>
-          {!isAuthenticated ? (
-            <p className="appointment-empty-upcoming">Book an appointment above or log in to view your saved appointments.</p>
-          ) : upcomingAppointments.length ? (
+          {visibleAppointments.length ? (
             <div className="appointment-upcoming-list">
-              {upcomingAppointments.map((item) => (
+              {visibleAppointments.map((item) => (
                 <article key={item.id} className="appointment-upcoming-item">
                   <div>
                     <strong>{formatLongDate(item.date)}</strong>
@@ -621,10 +681,21 @@ export function AppointmentForm() {
               ))}
             </div>
           ) : (
-            <p className="appointment-empty-upcoming">No upcoming appointments booked yet.</p>
+            <p className="appointment-empty-upcoming">
+              {isAuthenticated ? 'No upcoming appointments booked yet.' : 'Book an appointment above to see it listed here.'}
+            </p>
           )}
         </div>
       </section>
     </div>
   );
 }
+
+
+
+
+
+
+
+
+

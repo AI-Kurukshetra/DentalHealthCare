@@ -1,5 +1,5 @@
-import { SectionHeading } from '../../components/SectionHeading';
-import { AppointmentForm } from '../../components/AppointmentForm';
+import { SectionHeading } from "../../components/SectionHeading";
+import { AppointmentForm } from "../../components/AppointmentForm";
 
 export default async function AppointmentPage() {
   return (

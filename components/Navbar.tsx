@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import {
   Facebook,
   Instagram,
@@ -11,7 +11,6 @@ import {
   Mail,
   MapPin,
   Search,
-  Smile,
   Twitter,
   User,
   X,
@@ -32,11 +31,65 @@ const emptyUser: NavUser = {
   avatarUrl: "",
 };
 
+const searchItems = [
+  {
+    label: "Teeth Whitening",
+    href: "/services",
+    keywords: ["whitening", "stains", "cosmetic"],
+  },
+  {
+    label: "Dental Implants",
+    href: "/services",
+    keywords: ["implants", "tooth replacement", "restoration"],
+  },
+  {
+    label: "Orthodontics",
+    href: "/team",
+    keywords: ["braces", "aligners", "straightening"],
+  },
+  {
+    label: "Preventive Care Programs",
+    href: "/services",
+    keywords: ["hygiene", "cleaning", "prevention"],
+  },
+  {
+    label: "Appointment Scheduling",
+    href: "/appointment",
+    keywords: ["booking", "calendar", "consultation"],
+  },
+  {
+    label: "Emergency Care",
+    href: "/contact",
+    keywords: ["urgent", "pain", "same day"],
+  },
+  {
+    label: "Patient Management System",
+    href: "/features",
+    keywords: ["patients", "records", "profiles"],
+  },
+  {
+    label: "Billing & Insurance",
+    href: "/features",
+    keywords: ["billing", "claims", "insurance"],
+  },
+  {
+    label: "Blog Insights",
+    href: "/blog",
+    keywords: ["articles", "insights", "playbooks"],
+  },
+  {
+    label: "Contact the Clinic",
+    href: "/contact",
+    keywords: ["contact", "phone", "email"],
+  },
+] as const;
+
 export function Navbar() {
   const router = useRouter();
   const [supabase] = useState(() => supabaseBrowser());
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [accountOpen, setAccountOpen] = useState(false);
   const [navUser, setNavUser] = useState<NavUser | null>(null);
   const navRef = useRef<HTMLElement | null>(null);
@@ -120,10 +173,15 @@ export function Navbar() {
     return () => subscription.unsubscribe();
   }, [supabase]);
 
+  const closeSearch = () => {
+    setSearchOpen(false);
+    window.setTimeout(() => setSearchQuery(""), 180);
+  };
+
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setSearchOpen(false);
+        closeSearch();
         setAccountOpen(false);
       }
     };
@@ -157,6 +215,61 @@ export function Navbar() {
     setOpen(false);
     router.push("/login");
     router.refresh();
+  };
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const searchMatches =
+    normalizedQuery.length === 0
+      ? searchItems.slice(0, 5)
+      : searchItems.filter((item) => {
+          const labelMatch = item.label.toLowerCase().includes(normalizedQuery);
+          const keywordMatch = item.keywords.some((keyword) =>
+            keyword.toLowerCase().includes(normalizedQuery),
+          );
+
+          return labelMatch || keywordMatch;
+        });
+
+  const commitSearch = (item: (typeof searchItems)[number]) => {
+    setSearchQuery(item.label);
+    closeSearch();
+    router.push(item.href);
+  };
+
+  const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const nextValue = event.target.value;
+    const nextValueNormalized = nextValue.trim().toLowerCase();
+    const inputType =
+      event.nativeEvent instanceof InputEvent ? event.nativeEvent.inputType : "";
+
+    if (!nextValueNormalized || inputType.startsWith("delete")) {
+      setSearchQuery(nextValue);
+      return;
+    }
+
+    const autofillMatch = searchItems.find((item) =>
+      item.label.toLowerCase().startsWith(nextValueNormalized),
+    );
+
+    if (!autofillMatch) {
+      setSearchQuery(nextValue);
+      return;
+    }
+
+    setSearchQuery(autofillMatch.label);
+    window.requestAnimationFrame(() => {
+      searchRef.current?.focus();
+      searchRef.current?.setSelectionRange(
+        nextValue.length,
+        autofillMatch.label.length,
+      );
+    });
+  };
+
+  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (searchMatches.length === 0) return;
+    commitSearch(searchMatches[0]);
   };
 
   return (
@@ -243,7 +356,6 @@ export function Navbar() {
                     initials || <User size={16} />
                   )}
                 </span>
-
               </button>
               {accountOpen ? (
                 <div className="nav-account-menu">
@@ -358,33 +470,59 @@ export function Navbar() {
         aria-modal="true"
         aria-hidden={!searchOpen}
       >
-        <div className="search-backdrop" onClick={() => setSearchOpen(false)} />
+        <div className="search-backdrop" onClick={closeSearch} />
         <div className="search-panel">
           <div className="search-header">
             <button
               className="search-close"
-              onClick={() => setSearchOpen(false)}
+              onClick={closeSearch}
               aria-label="Close search"
             >
               <X size={16} />
             </button>
           </div>
-          <div className="search-field">
-            <span className="search-icon" aria-hidden="true">
-              <Search size={18} />
-            </span>
-            <input
-              ref={searchRef}
-              type="text"
-              placeholder="Search for orthodontics, whitening, hygiene..."
-            />
-          </div>
+          <form className="search-form" onSubmit={handleSearchSubmit}>
+            <div className="search-field">
+              <span className="search-icon" aria-hidden="true">
+                <Search size={18} />
+              </span>
+              <input
+                ref={searchRef}
+                type="text"
+                list="site-search-suggestions"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                placeholder="Search for orthodontics, whitening, hygiene..."
+                autoComplete="on"
+                spellCheck={false}
+              />
+              <button className="search-submit" type="submit">
+                Go
+              </button>
+            </div>
+            <datalist id="site-search-suggestions">
+              {searchItems.map((item) => (
+                <option key={item.label} value={item.label} />
+              ))}
+            </datalist>
+          </form>
+          <p className="search-hint">
+            Start typing for autofill, then press Enter to open the best match.
+          </p>
           <div className="search-suggestions">
-            <button type="button">Teeth Whitening</button>
-            <button type="button">Braces & Aligners</button>
-            <button type="button">Dental Implants</button>
-            <button type="button">Family Dentistry</button>
-            <button type="button">Emergency Care</button>
+            {searchMatches.length > 0 ? (
+              searchMatches.map((item) => (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => commitSearch(item)}
+                >
+                  {item.label}
+                </button>
+              ))
+            ) : (
+              <span className="search-empty">No matching results found.</span>
+            )}
           </div>
         </div>
       </div>

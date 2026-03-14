@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Bell,
   CalendarDays,
@@ -26,7 +26,7 @@ const fallbackProfile = {
   phone: "(555) 210-4821",
   email: "ariana.patel@example.com",
   address: "742 Evergreen Terrace, Springfield, IL",
-  emergencyContact: "Ravi Patel • (555) 210-1198",
+  emergencyContact: "Ravi Patel ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ (555) 210-1198",
   allergies: "Penicillin, Latex",
   conditions: "Mild asthma",
   medications: "Albuterol inhaler",
@@ -93,6 +93,7 @@ export function DashboardClient() {
   const [billing, setBilling] = useState(fallbackBilling);
   const [notifications, setNotifications] = useState(fallbackNotifications);
   const [menuOpen, setMenuOpen] = useState(false);
+  const dashboardRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const loadDashboard = async () => {
@@ -195,13 +196,24 @@ export function DashboardClient() {
   }, [router, supabase]);
 
   useEffect(() => {
-    gsap.from(".dash-section", {
-      opacity: 0,
-      y: 24,
-      duration: 0.7,
-      stagger: 0.1,
-      ease: "power3.out",
-    });
+    if (!dashboardRef.current) return;
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        '.dash-section',
+        { opacity: 0, y: 24 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.7,
+          stagger: 0.1,
+          ease: 'power3.out',
+          clearProps: 'opacity,transform'
+        }
+      );
+    }, dashboardRef);
+
+    return () => ctx.revert();
   }, []);
 
   const handleLogout = async () => {
@@ -210,7 +222,7 @@ export function DashboardClient() {
   };
 
   return (
-    <div className="dashboard">
+    <div ref={dashboardRef} className="dashboard">
       <aside className="sidebar">
         <div className="sidebar-brand">
           <span className="brand-dot" />

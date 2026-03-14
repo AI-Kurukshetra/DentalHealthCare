@@ -1,14 +1,14 @@
-'use client';
+﻿'use client';
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect } from 'react';
-import { CalendarClock, CalendarDays, FileText, Image as ImageIcon, ReceiptText, UsersRound } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { CalendarClock, CalendarDays, FileText, Image as ImageIcon, ReceiptText, UsersRound, X } from 'lucide-react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { LinkButton } from './Button';
 import { SectionHeading } from './SectionHeading';
-import { featureList, services, team, testimonials, blogFallback } from '../lib/content';
+import { featureList, team, testimonials, blogFallback } from '../lib/content';
 
 const processSteps = [
   {
@@ -72,7 +72,109 @@ const spotlightServices = [
   }
 ];
 
+
+const ourServices = [
+  {
+    title: 'Cavity Protection',
+    description: 'Will help strengthen teeth and leave your mouth feeling fresh.',
+    icon: (
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M22 10c-6 0-10 4.8-10 11.2 0 3.6 1.1 7.1 2.9 10l4.8 7.8c1.3 2 2.1 4.3 2.4 6.7l.9 6.5c.1 1 .9 1.8 1.9 1.8h3.6c1 0 1.8-.8 1.9-1.8L32 42h0l1.6 11.1c.1 1 .9 1.8 1.9 1.8h3.6c1 0 1.8-.8 1.9-1.8l.9-6.5c.3-2.4 1.1-4.7 2.4-6.7l4.8-7.8c1.8-2.9 2.9-6.4 2.9-10C52 14.8 48 10 42 10c-3 0-5.3 1-7 2.9-1.7-1.9-4-2.9-7-2.9Z" />
+        <circle cx="25" cy="26" r="6.5" />
+        <path d="m27 24-4 4" />
+      </svg>
+    )
+  },
+  {
+    title: 'Implant Dentistry',
+    description: 'Dental implants are the closest you can get to healthy, natural teeth.',
+    icon: (
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M25 11c0 5 3 8 7 8s7-3 7-8" />
+        <path d="M24 11h16" />
+        <path d="M30 19v10" />
+        <path d="M34 19v10" />
+        <path d="M28 29h8" />
+        <path d="M25 29c-5 0-9 4.2-9 9.5 0 2.7.9 5.4 2.3 7.6l3.3 5.1c1.1 1.6 1.7 3.4 1.9 5.3h16.4c.2-1.9.8-3.7 1.9-5.3l3.3-5.1c1.4-2.2 2.3-4.9 2.3-7.6 0-5.3-4-9.5-9-9.5Z" />
+      </svg>
+    )
+  },
+  {
+    title: 'Cosmetic Dentistry',
+    description: 'Cosmetic dentistry improves the appearance of an individual’s teeth.',
+    icon: (
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M18 23c7 1 10-3 14-3s7 4 14 3c0 11-5 23-14 23S18 34 18 23Z" />
+        <path d="M25 20c-1-4 1-8 5-8" />
+        <path d="M38 28c-2 3-4 5-6 5s-4-2-6-5" />
+      </svg>
+    )
+  },
+  {
+    title: 'Parodontosis',
+    description: 'Timely treated parodontosis disease can save you from tooth loss.',
+    icon: (
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M22 10c-6 0-10 4.8-10 11.2 0 3.6 1.1 7.1 2.9 10l4.8 7.8c1.3 2 2.1 4.3 2.4 6.7l.9 6.5c.1 1 .9 1.8 1.9 1.8h3.6c1 0 1.8-.8 1.9-1.8L32 42h0l1.6 11.1c.1 1 .9 1.8 1.9 1.8h3.6c1 0 1.8-.8 1.9-1.8l.9-6.5c.3-2.4 1.1-4.7 2.4-6.7l4.8-7.8c1.8-2.9 2.9-6.4 2.9-10C52 14.8 48 10 42 10c-3 0-5.3 1-7 2.9-1.7-1.9-4-2.9-7-2.9Z" />
+        <path d="M24 37c2-4 5-6 8-6s6 2 8 6" />
+        <path d="M21 31h3" />
+        <path d="M40 31h3" />
+      </svg>
+    )
+  },
+  {
+    title: 'Dental Radiography',
+    description: 'Digital imaging tools help diagnose issues early and support safer planning.',
+    icon: (
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M22 10c-6 0-10 4.8-10 11.2 0 3.6 1.1 7.1 2.9 10l4.8 7.8c1.3 2 2.1 4.3 2.4 6.7l.9 6.5c.1 1 .9 1.8 1.9 1.8h3.6c1 0 1.8-.8 1.9-1.8L32 42h0l1.6 11.1c.1 1 .9 1.8 1.9 1.8h3.6c1 0 1.8-.8 1.9-1.8l.9-6.5c.3-2.4 1.1-4.7 2.4-6.7l4.8-7.8c1.8-2.9 2.9-6.4 2.9-10C52 14.8 48 10 42 10c-3 0-5.3 1-7 2.9-1.7-1.9-4-2.9-7-2.9Z" />
+        <circle cx="32" cy="24" r="9" />
+        <path d="M32 15v18" />
+        <path d="M23 24h18" />
+      </svg>
+    )
+  },
+  {
+    title: 'Tooth Restorations',
+    description: 'We can replace missing teeth or repair damage with durable restorations.',
+    icon: (
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M22 10c-6 0-10 4.8-10 11.2 0 3.6 1.1 7.1 2.9 10l4.8 7.8c1.3 2 2.1 4.3 2.4 6.7l.9 6.5c.1 1 .9 1.8 1.9 1.8h3.6c1 0 1.8-.8 1.9-1.8L32 42h0l1.6 11.1c.1 1 .9 1.8 1.9 1.8h3.6c1 0 1.8-.8 1.9-1.8l.9-6.5c.3-2.4 1.1-4.7 2.4-6.7l4.8-7.8c1.8-2.9 2.9-6.4 2.9-10C52 14.8 48 10 42 10c-3 0-5.3 1-7 2.9-1.7-1.9-4-2.9-7-2.9Z" />
+        <path d="m29 21 6 6" />
+        <path d="m35 21-6 6" />
+      </svg>
+    )
+  },
+  {
+    title: 'Sedation Dentistry',
+    description: 'Medication-assisted comfort helps patients feel calm during treatment.',
+    icon: (
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path d="m39 16 9 9" />
+        <path d="m22 33 18-18 7 7-18 18" />
+        <path d="M18 37 9 46" />
+        <path d="M28 43 18 53" />
+        <path d="M17 48 14 45" />
+      </svg>
+    )
+  },
+  {
+    title: 'Crowns & Bridges',
+    description: 'We design and place custom crowns and bridges for long-term function.',
+    icon: (
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M12 27h10l3 8h14l3-8h10" />
+        <path d="M15 27c0 7 3 12 8 12 4 0 6-3 7-8" />
+        <path d="M49 27c0 7-3 12-8 12-4 0-6-3-7-8" />
+        <path d="M30 27h4" />
+      </svg>
+    )
+  }
+];
+
 export function HomeClient() {
+  const [videoOpen, setVideoOpen] = useState(false);
+
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
 
@@ -93,10 +195,62 @@ export function HomeClient() {
           start: 'top 82%'
         }
       });
+      gsap.from('.our-services-card', {
+        y: 30,
+        opacity: 0,
+        duration: 0.7,
+        stagger: 0.08,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: '.our-services-grid',
+          start: 'top 84%'
+        }
+      });
+      gsap.from('.trust-strip-copy, .trust-strip-panel', {
+        y: 28,
+        opacity: 0,
+        duration: 0.7,
+        stagger: 0.12,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: '.trust-strip-shell',
+          start: 'top 84%'
+        }
+      });
+      gsap.from('.trust-mark-pill', {
+        y: 18,
+        opacity: 0,
+        duration: 0.5,
+        stagger: 0.08,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: '.trust-grid',
+          start: 'top 88%'
+        }
+      });
     });
 
     return () => ctx.revert();
   }, []);
+
+  useEffect(() => {
+    if (!videoOpen) return;
+
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setVideoOpen(false);
+      }
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKey);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKey);
+    };
+  }, [videoOpen]);
 
   return (
     <main id="top">
@@ -169,27 +323,84 @@ export function HomeClient() {
               Learn More
             </a>
           </article>
-          <div className="welcome-showcase-image">
+          <button
+            className="welcome-showcase-image"
+            type="button"
+            aria-label="Play dental technology video"
+            onClick={() => setVideoOpen(true)}
+          >
             <Image
               src="/images/img.jpeg"
               alt="Dental patient receiving treatment"
               fill
               sizes="(max-width: 900px) 100vw, 52vw"
             />
-            <div className="welcome-showcase-play" aria-hidden="true">
+            <span className="welcome-showcase-video-label">Watch video</span>
+            <span className="welcome-showcase-play" aria-hidden="true">
               <span />
-            </div>
-          </div>
+            </span>
+          </button>
           <div className="welcome-showcase-accent" aria-hidden="true" />
         </div>
       </section>
 
+      {videoOpen ? (
+        <div
+          className="video-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Dental technology video"
+        >
+          <button
+            className="video-modal-backdrop"
+            type="button"
+            aria-label="Close video modal"
+            onClick={() => setVideoOpen(false)}
+          />
+          <div className="video-modal-panel">
+            <button
+              className="video-modal-close"
+              type="button"
+              aria-label="Close video"
+              onClick={() => setVideoOpen(false)}
+            >
+              <X size={18} />
+            </button>
+            <video
+              className="video-modal-player"
+              src="/images/video.mp4"
+              controls
+              autoPlay
+              playsInline
+              preload="metadata"
+            />
+          </div>
+        </div>
+      ) : null}
+
       <section className="trust-strip">
-        <p>Trusted by high-growth dental groups across 12 states</p>
-        <div className="trust-grid">
-          {trustMarks.map((item) => (
-            <span key={item}>{item}</span>
-          ))}
+        <div className="trust-strip-shell">
+          <div className="trust-strip-copy">
+            <span className="trust-strip-eyebrow">Group Practice Ready</span>
+            <h2>Trusted by high-growth dental groups across 12 states</h2>
+            <p>
+              Built for expanding dental organizations that need one polished operating layer for scheduling,
+              patient coordination, billing visibility, and compliance-aware daily workflows.
+            </p>
+          </div>
+          <div className="trust-strip-panel">
+            <div className="trust-strip-stat">
+              <strong>12</strong>
+              <span>States with active dental group deployments</span>
+            </div>
+            <div className="trust-grid">
+              {trustMarks.map((item) => (
+                <span key={item} className="trust-mark-pill">
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -226,23 +437,26 @@ export function HomeClient() {
         </div>
       </section>
 
-      <section className="section section-alt">
-        <SectionHeading
-          eyebrow="Services"
-          title="White-glove rollout services, delivered with zero disruption"
-          subtitle="Implementation, training, and optimization tailored to your clinical operations."
-        />
-        <div className="service-grid">
-          {services.map((service) => (
-            <article key={service.title} className="service-card">
-              <div className="service-icon">{service.icon}</div>
-              <h3>{service.title}</h3>
-              <p>{service.description}</p>
-            </article>
-          ))}
-        </div>
-        <div className="section-cta">
-          <LinkButton href="/services">Explore services</LinkButton>
+      <section className="our-services-section">
+        <div className="our-services-shell">
+          <div className="our-services-head">
+            <div className="our-services-badge">
+              <svg viewBox="0 0 64 64" aria-hidden="true">
+                <path d="M22 10c-6 0-10 4.8-10 11.2 0 3.6 1.1 7.1 2.9 10l4.8 7.8c1.3 2 2.1 4.3 2.4 6.7l.9 6.5c.1 1 .9 1.8 1.9 1.8h3.6c1 0 1.8-.8 1.9-1.8L32 42h0l1.6 11.1c.1 1 .9 1.8 1.9 1.8h3.6c1 0 1.8-.8 1.9-1.8l.9-6.5c.3-2.4 1.1-4.7 2.4-6.7l4.8-7.8c1.8-2.9 2.9-6.4 2.9-10C52 14.8 48 10 42 10c-3 0-5.3 1-7 2.9-1.7-1.9-4-2.9-7-2.9Z" />
+              </svg>
+              <span>WHY CHOOSE US</span>
+            </div>
+            <h2>Our Services</h2>
+          </div>
+          <div className="our-services-grid">
+            {ourServices.map((service, index) => (
+              <article key={service.title} className="our-services-card">
+                <div className={`our-services-icon${index === 3 ? ' is-ink' : ''}`}>{service.icon}</div>
+                <h3>{service.title}</h3>
+                <p>{service.description}</p>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -319,26 +533,18 @@ export function HomeClient() {
               <span className="tag">{post.tag}</span>
               <h3>{post.title}</h3>
               <p>{post.excerpt}</p>
+              <Link href="/blog" className="text-link">
+                Read article
+              </Link>
             </article>
           ))}
-        </div>
-        <div className="section-cta">
-          <LinkButton href="/blog">Read the blog</LinkButton>
-        </div>
-      </section>
-
-      <section className="cta-band">
-        <div>
-          <h2>Ready to modernize your front office?</h2>
-          <p>We will map your workflows, connect your data, and launch in weeks, not months.</p>
-        </div>
-        <div className="cta-actions">
-          <LinkButton href="/appointment">Book a consultation</LinkButton>
-          <a className="btn-ghost" href="/contact">
-            Contact sales
-          </a>
         </div>
       </section>
     </main>
   );
 }
+
+
+
+
+

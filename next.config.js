@@ -7,6 +7,11 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'www.outsourcestrategies.com',
         pathname: '/wp-content/uploads/**'
+      },
+      {
+        protocol: 'https',
+        hostname: 'api.dicebear.com',
+        pathname: '/9.x/**'
       }
     ]
   },
@@ -16,4 +21,3 @@ const nextConfig = {
 };
 
 export default nextConfig;
-
