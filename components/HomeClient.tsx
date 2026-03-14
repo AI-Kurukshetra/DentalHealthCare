@@ -1,40 +1,40 @@
-﻿'use client';
+﻿"use client";
 
-import Image from 'next/image';
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { CalendarClock, CalendarDays, FileText, Image as ImageIcon, ReceiptText, UsersRound, X } from 'lucide-react';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { LinkButton } from './Button';
-import { SectionHeading } from './SectionHeading';
-import { featureList, team, testimonials, blogFallback } from '../lib/content';
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useState, type CSSProperties } from "react";
+import {
+  CalendarClock,
+  CalendarDays,
+  FileText,
+  Image as ImageIcon,
+  ReceiptText,
+  UsersRound,
+  X,
+} from "lucide-react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { LinkButton } from "./Button";
+import { SectionHeading } from "./SectionHeading";
+import { featureList, team, testimonials, blogFallback } from "../lib/content";
 
-const processSteps = [
-  {
-    title: 'Discovery & Audit',
-    description: 'We map your current workflows, pain points, and goals to set success metrics.'
-  },
-  {
-    title: 'Implementation Sprint',
-    description: 'Config, data migration, and integrations happen in a guided, two-week rollout.'
-  },
-  {
-    title: 'Training & Optimization',
-    description: 'Live team training, follow-up optimization, and continuous performance tuning.'
-  }
+const trustMarks = [
+  "HIPAA-Aligned",
+  "SOC 2 Minded",
+  "99.99% Uptime",
+  "24/7 Support",
+  "US Data Residency",
 ];
-
-const trustMarks = ['HIPAA-Aligned', 'SOC 2 Minded', '99.99% Uptime', '24/7 Support', 'US Data Residency'];
 const featureIconMap = {
   patients: UsersRound,
   schedule: CalendarClock,
-  billing: ReceiptText
+  billing: ReceiptText,
 } as const;
 const spotlightServices = [
   {
-    title: 'Dental Implants',
-    description: 'Dental implants are the closest you can get to healthy, beautiful and natural teeth.',
+    title: "Dental Implants",
+    description:
+      "Dental implants are the closest you can get to healthy, beautiful and natural teeth.",
     icon: (
       <svg viewBox="0 0 64 64" aria-hidden="true">
         <path d="M22 10c-6 0-10 4.8-10 11.2 0 3.6 1.1 7.1 2.9 10l5 8.1c1.2 1.9 2 4 2.2 6.3L23.3 54c.1 1 .9 1.8 1.9 1.8h13.6c1 0 1.8-.8 1.9-1.8l1.2-8.4c.3-2.2 1-4.4 2.2-6.3l5-8.1c1.8-2.9 2.9-6.4 2.9-10C52 14.8 48 10 42 10c-3 0-5.3 1-7 2.9-1.7-1.9-4-2.9-7-2.9Z" />
@@ -43,11 +43,12 @@ const spotlightServices = [
         <path d="M29 42h6" />
         <path d="M32 27v23" />
       </svg>
-    )
+    ),
   },
   {
-    title: 'Parodontosis Care',
-    description: 'Timely diagnosed and treated parodontosis disease can save you from tooth loss.',
+    title: "Parodontosis Care",
+    description:
+      "Timely diagnosed and treated parodontosis disease can save you from tooth loss.",
     icon: (
       <svg viewBox="0 0 64 64" aria-hidden="true">
         <path d="M22 10c-6 0-10 4.8-10 11.2 0 3.6 1.1 7.1 2.9 10l4.5 7.2c1.4 2.1 2.3 4.5 2.6 7l.8 6c.1 1 .9 1.7 1.9 1.7h3.8c1 0 1.8-.8 1.9-1.8l1.4-10.7h1.6L35 51.3c.1 1 .9 1.8 1.9 1.8h3.4c1 0 1.8-.7 1.9-1.7l.8-6c.3-2.5 1.2-4.9 2.6-7l4.5-7.2c1.8-2.9 2.9-6.4 2.9-10C53 14.8 49 10 43 10c-3 0-5.3 1-7 2.9-1.7-1.9-4-2.9-7-2.9Z" />
@@ -57,37 +58,39 @@ const spotlightServices = [
         <circle cx="31" cy="34" r="1.5" />
         <circle cx="39" cy="30" r="1.5" />
       </svg>
-    )
+    ),
   },
   {
-    title: 'Teeth Whitening',
-    description: 'Teeth Whitening improve how your teeth look by removing stains and discoloration.',
+    title: "Teeth Whitening",
+    description:
+      "Teeth Whitening improve how your teeth look by removing stains and discoloration.",
     icon: (
       <svg viewBox="0 0 64 64" aria-hidden="true">
         <path d="M22 10c-6 0-10 4.8-10 11.2 0 3.6 1.1 7.1 2.9 10l4.8 7.8c1.3 2 2.1 4.3 2.4 6.7l.9 6.5c.1 1 .9 1.8 1.9 1.8h3.6c1 0 1.8-.8 1.9-1.8L32 42h0l1.6 11.1c.1 1 .9 1.8 1.9 1.8h3.6c1 0 1.8-.8 1.9-1.8l.9-6.5c.3-2.4 1.1-4.7 2.4-6.7l4.8-7.8c1.8-2.9 2.9-6.4 2.9-10C52 14.8 48 10 42 10c-3 0-5.3 1-7 2.9-1.7-1.9-4-2.9-7-2.9Z" />
         <path d="m47 12 1.3 4.2L53 17.5l-4.7 1.3L47 23l-1.3-4.2L41 17.5l4.7-1.3L47 12Z" />
         <path d="m18 18 .8 2.5L22 21.3l-3.2.8L18 24.5l-.8-2.4-3.2-.8 3.2-.8L18 18Z" />
       </svg>
-    )
-  }
+    ),
+  },
 ];
-
 
 const ourServices = [
   {
-    title: 'Cavity Protection',
-    description: 'Will help strengthen teeth and leave your mouth feeling fresh.',
+    title: "Cavity Protection",
+    description:
+      "Will help strengthen teeth and leave your mouth feeling fresh.",
     icon: (
       <svg viewBox="0 0 64 64" aria-hidden="true">
         <path d="M22 10c-6 0-10 4.8-10 11.2 0 3.6 1.1 7.1 2.9 10l4.8 7.8c1.3 2 2.1 4.3 2.4 6.7l.9 6.5c.1 1 .9 1.8 1.9 1.8h3.6c1 0 1.8-.8 1.9-1.8L32 42h0l1.6 11.1c.1 1 .9 1.8 1.9 1.8h3.6c1 0 1.8-.8 1.9-1.8l.9-6.5c.3-2.4 1.1-4.7 2.4-6.7l4.8-7.8c1.8-2.9 2.9-6.4 2.9-10C52 14.8 48 10 42 10c-3 0-5.3 1-7 2.9-1.7-1.9-4-2.9-7-2.9Z" />
         <circle cx="25" cy="26" r="6.5" />
         <path d="m27 24-4 4" />
       </svg>
-    )
+    ),
   },
   {
-    title: 'Implant Dentistry',
-    description: 'Dental implants are the closest you can get to healthy, natural teeth.',
+    title: "Implant Dentistry",
+    description:
+      "Dental implants are the closest you can get to healthy, natural teeth.",
     icon: (
       <svg viewBox="0 0 64 64" aria-hidden="true">
         <path d="M25 11c0 5 3 8 7 8s7-3 7-8" />
@@ -97,22 +100,24 @@ const ourServices = [
         <path d="M28 29h8" />
         <path d="M25 29c-5 0-9 4.2-9 9.5 0 2.7.9 5.4 2.3 7.6l3.3 5.1c1.1 1.6 1.7 3.4 1.9 5.3h16.4c.2-1.9.8-3.7 1.9-5.3l3.3-5.1c1.4-2.2 2.3-4.9 2.3-7.6 0-5.3-4-9.5-9-9.5Z" />
       </svg>
-    )
+    ),
   },
   {
-    title: 'Cosmetic Dentistry',
-    description: 'Cosmetic dentistry improves the appearance of an individual’s teeth.',
+    title: "Cosmetic Dentistry",
+    description:
+      "Cosmetic dentistry improves the appearance of an individual’s teeth.",
     icon: (
       <svg viewBox="0 0 64 64" aria-hidden="true">
         <path d="M18 23c7 1 10-3 14-3s7 4 14 3c0 11-5 23-14 23S18 34 18 23Z" />
         <path d="M25 20c-1-4 1-8 5-8" />
         <path d="M38 28c-2 3-4 5-6 5s-4-2-6-5" />
       </svg>
-    )
+    ),
   },
   {
-    title: 'Parodontosis',
-    description: 'Timely treated parodontosis disease can save you from tooth loss.',
+    title: "Parodontosis",
+    description:
+      "Timely treated parodontosis disease can save you from tooth loss.",
     icon: (
       <svg viewBox="0 0 64 64" aria-hidden="true">
         <path d="M22 10c-6 0-10 4.8-10 11.2 0 3.6 1.1 7.1 2.9 10l4.8 7.8c1.3 2 2.1 4.3 2.4 6.7l.9 6.5c.1 1 .9 1.8 1.9 1.8h3.6c1 0 1.8-.8 1.9-1.8L32 42h0l1.6 11.1c.1 1 .9 1.8 1.9 1.8h3.6c1 0 1.8-.8 1.9-1.8l.9-6.5c.3-2.4 1.1-4.7 2.4-6.7l4.8-7.8c1.8-2.9 2.9-6.4 2.9-10C52 14.8 48 10 42 10c-3 0-5.3 1-7 2.9-1.7-1.9-4-2.9-7-2.9Z" />
@@ -120,11 +125,12 @@ const ourServices = [
         <path d="M21 31h3" />
         <path d="M40 31h3" />
       </svg>
-    )
+    ),
   },
   {
-    title: 'Dental Radiography',
-    description: 'Digital imaging tools help diagnose issues early and support safer planning.',
+    title: "Dental Radiography",
+    description:
+      "Digital imaging tools help diagnose issues early and support safer planning.",
     icon: (
       <svg viewBox="0 0 64 64" aria-hidden="true">
         <path d="M22 10c-6 0-10 4.8-10 11.2 0 3.6 1.1 7.1 2.9 10l4.8 7.8c1.3 2 2.1 4.3 2.4 6.7l.9 6.5c.1 1 .9 1.8 1.9 1.8h3.6c1 0 1.8-.8 1.9-1.8L32 42h0l1.6 11.1c.1 1 .9 1.8 1.9 1.8h3.6c1 0 1.8-.8 1.9-1.8l.9-6.5c.3-2.4 1.1-4.7 2.4-6.7l4.8-7.8c1.8-2.9 2.9-6.4 2.9-10C52 14.8 48 10 42 10c-3 0-5.3 1-7 2.9-1.7-1.9-4-2.9-7-2.9Z" />
@@ -132,22 +138,24 @@ const ourServices = [
         <path d="M32 15v18" />
         <path d="M23 24h18" />
       </svg>
-    )
+    ),
   },
   {
-    title: 'Tooth Restorations',
-    description: 'We can replace missing teeth or repair damage with durable restorations.',
+    title: "Tooth Restorations",
+    description:
+      "We can replace missing teeth or repair damage with durable restorations.",
     icon: (
       <svg viewBox="0 0 64 64" aria-hidden="true">
         <path d="M22 10c-6 0-10 4.8-10 11.2 0 3.6 1.1 7.1 2.9 10l4.8 7.8c1.3 2 2.1 4.3 2.4 6.7l.9 6.5c.1 1 .9 1.8 1.9 1.8h3.6c1 0 1.8-.8 1.9-1.8L32 42h0l1.6 11.1c.1 1 .9 1.8 1.9 1.8h3.6c1 0 1.8-.8 1.9-1.8l.9-6.5c.3-2.4 1.1-4.7 2.4-6.7l4.8-7.8c1.8-2.9 2.9-6.4 2.9-10C52 14.8 48 10 42 10c-3 0-5.3 1-7 2.9-1.7-1.9-4-2.9-7-2.9Z" />
         <path d="m29 21 6 6" />
         <path d="m35 21-6 6" />
       </svg>
-    )
+    ),
   },
   {
-    title: 'Sedation Dentistry',
-    description: 'Medication-assisted comfort helps patients feel calm during treatment.',
+    title: "Sedation Dentistry",
+    description:
+      "Medication-assisted comfort helps patients feel calm during treatment.",
     icon: (
       <svg viewBox="0 0 64 64" aria-hidden="true">
         <path d="m39 16 9 9" />
@@ -156,11 +164,12 @@ const ourServices = [
         <path d="M28 43 18 53" />
         <path d="M17 48 14 45" />
       </svg>
-    )
+    ),
   },
   {
-    title: 'Crowns & Bridges',
-    description: 'We design and place custom crowns and bridges for long-term function.',
+    title: "Crowns & Bridges",
+    description:
+      "We design and place custom crowns and bridges for long-term function.",
     icon: (
       <svg viewBox="0 0 64 64" aria-hidden="true">
         <path d="M12 27h10l3 8h14l3-8h10" />
@@ -168,8 +177,8 @@ const ourServices = [
         <path d="M49 27c0 7-3 12-8 12-4 0-6-3-7-8" />
         <path d="M30 27h4" />
       </svg>
-    )
-  }
+    ),
+  },
 ];
 
 export function HomeClient() {
@@ -179,54 +188,83 @@ export function HomeClient() {
     gsap.registerPlugin(ScrollTrigger);
 
     const ctx = gsap.context(() => {
-      gsap.from('.hero-eyebrow', { y: 16, opacity: 0, duration: 0.5, ease: 'power3.out' });
-      gsap.from('.hero-title', { y: 26, opacity: 0, duration: 0.7, delay: 0.1, ease: 'power3.out' });
-      gsap.from('.hero-subtitle', { y: 18, opacity: 0, duration: 0.6, delay: 0.2, ease: 'power3.out' });
-      gsap.from('.hero-actions', { y: 18, opacity: 0, duration: 0.6, delay: 0.3, ease: 'power3.out' });
-      gsap.from('.hero-photo', { x: -24, opacity: 0, duration: 0.8, delay: 0.2, ease: 'power3.out' });
-      gsap.from('.feature-showcase-card', {
+      gsap.from(".hero-eyebrow", {
+        y: 16,
+        opacity: 0,
+        duration: 0.5,
+        ease: "power3.out",
+      });
+      gsap.from(".hero-title", {
+        y: 26,
+        opacity: 0,
+        duration: 0.7,
+        delay: 0.1,
+        ease: "power3.out",
+      });
+      gsap.from(".hero-subtitle", {
+        y: 18,
+        opacity: 0,
+        duration: 0.6,
+        delay: 0.2,
+        ease: "power3.out",
+      });
+      gsap.from(".hero-actions", {
+        y: 18,
+        opacity: 0,
+        duration: 0.6,
+        delay: 0.3,
+        ease: "power3.out",
+      });
+      gsap.from(".hero-photo", {
+        x: -24,
+        opacity: 0,
+        duration: 0.8,
+        delay: 0.2,
+        ease: "power3.out",
+      });
+      gsap.from(".feature-showcase-card", {
         y: 36,
         opacity: 0,
         duration: 0.8,
         stagger: 0.12,
-        ease: 'power3.out',
+        ease: "power3.out",
         scrollTrigger: {
-          trigger: '.feature-showcase-grid',
-          start: 'top 82%'
-        }
+          trigger: ".feature-showcase-grid",
+          start: "top 82%",
+        },
       });
-      gsap.from('.our-services-card', {
+      gsap.from(".our-services-card", {
         y: 30,
         opacity: 0,
         duration: 0.7,
         stagger: 0.08,
-        ease: 'power3.out',
+        ease: "power3.out",
         scrollTrigger: {
-          trigger: '.our-services-grid',
-          start: 'top 84%'
-        }
+          trigger: ".our-services-grid",
+          start: "top 84%",
+        },
       });
-      gsap.from('.trust-strip-copy, .trust-strip-panel', {
+      gsap.from(".trust-strip-copy, .trust-strip-panel", {
         y: 28,
         opacity: 0,
         duration: 0.7,
         stagger: 0.12,
-        ease: 'power3.out',
+        ease: "power3.out",
         scrollTrigger: {
-          trigger: '.trust-strip-shell',
-          start: 'top 84%'
-        }
+          trigger: ".trust-strip-shell",
+          start: "top 84%",
+        },
       });
-      gsap.from('.trust-mark-pill', {
+      gsap.from(".trust-mark-pill", {
         y: 18,
         opacity: 0,
         duration: 0.5,
         stagger: 0.08,
-        ease: 'power3.out',
+        ease: "power3.out",
         scrollTrigger: {
-          trigger: '.trust-grid',
-          start: 'top 88%'
-        }
+          trigger: ".trust-grid",
+          start: "top 88%",
+        },
       });
     });
 
@@ -237,18 +275,18 @@ export function HomeClient() {
     if (!videoOpen) return;
 
     const handleKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         setVideoOpen(false);
       }
     };
 
     const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    window.addEventListener('keydown', handleKey);
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKey);
 
     return () => {
       document.body.style.overflow = previousOverflow;
-      window.removeEventListener('keydown', handleKey);
+      window.removeEventListener("keydown", handleKey);
     };
   }, [videoOpen]);
 
@@ -268,7 +306,10 @@ export function HomeClient() {
           <span className="hero-eyebrow">Dental Software</span>
           <h1 className="hero-title">Dental Practice Management Systems</h1>
           <p className="hero-subtitle">
-            Dental Practice Management systems streamline operations for dental offices by integrating patient records, scheduling, billing, treatment planning, and compliance management into unified cloud-based platforms.
+            Dental Practice Management systems streamline operations for dental
+            offices by integrating patient records, scheduling, billing,
+            treatment planning, and compliance management into unified
+            cloud-based platforms.
           </p>
           <div className="hero-actions">
             <LinkButton href="/appointment">Make an Appointment</LinkButton>
@@ -277,7 +318,11 @@ export function HomeClient() {
       </section>
 
       <div className="hero-quick">
-        <Link className="quick-action" href="/appointment" aria-label="Appointments">
+        <Link
+          className="quick-action"
+          href="/appointment"
+          aria-label="Appointments"
+        >
           <CalendarDays size={22} />
         </Link>
         <button className="quick-action" type="button" aria-label="Gallery">
@@ -315,9 +360,13 @@ export function HomeClient() {
         </div>
         <div className="welcome-showcase-stage">
           <article className="welcome-showcase-card">
-            <h3>We use advanced proven technology to keep your smile looking the best!</h3>
+            <h3>
+              We use advanced proven technology to keep your smile looking the
+              best!
+            </h3>
             <p>
-              We are passionate about smiles and having the latest technology is one step we can take to help save yours!
+              We are passionate about smiles and having the latest technology is
+              one step we can take to help save yours!
             </p>
             <a className="welcome-showcase-button" href="/services">
               Learn More
@@ -384,8 +433,9 @@ export function HomeClient() {
             <span className="trust-strip-eyebrow">Group Practice Ready</span>
             <h2>Trusted by high-growth dental groups across 12 states</h2>
             <p>
-              Built for expanding dental organizations that need one polished operating layer for scheduling,
-              patient coordination, billing visibility, and compliance-aware daily workflows.
+              Built for expanding dental organizations that need one polished
+              operating layer for scheduling, patient coordination, billing
+              visibility, and compliance-aware daily workflows.
             </p>
           </div>
           <div className="trust-strip-panel">
@@ -413,10 +463,21 @@ export function HomeClient() {
           />
           <div className="feature-showcase-grid">
             {featureList.slice(0, 4).map((feature, index) => {
-              const Icon = featureIconMap[feature.iconKey as keyof typeof featureIconMap] ?? FileText;
+              const Icon =
+                featureIconMap[
+                  feature.iconKey as keyof typeof featureIconMap
+                ] ?? FileText;
 
               return (
-                <article key={feature.title} className="feature-showcase-card">
+                <article
+                  key={feature.title}
+                  className="feature-showcase-card"
+                  style={
+                    {
+                      "--feature-image": `url(${feature.image})`,
+                    } as CSSProperties
+                  }
+                >
                   <div className="feature-showcase-card-top">
                     <span className="feature-showcase-icon" aria-hidden="true">
                       <Icon size={24} />
@@ -451,7 +512,11 @@ export function HomeClient() {
           <div className="our-services-grid">
             {ourServices.map((service, index) => (
               <article key={service.title} className="our-services-card">
-                <div className={`our-services-icon${index === 3 ? ' is-ink' : ''}`}>{service.icon}</div>
+                <div
+                  className={`our-services-icon${index === 3 ? " is-ink" : ""}`}
+                >
+                  {service.icon}
+                </div>
                 <h3>{service.title}</h3>
                 <p>{service.description}</p>
               </article>
@@ -460,24 +525,7 @@ export function HomeClient() {
         </div>
       </section>
 
-      <section className="section">
-        <SectionHeading
-          eyebrow="Process"
-          title="A focused rollout that respects your calendar"
-          subtitle="We handle change management so your team stays confident and productive."
-        />
-        <div className="process-grid">
-          {processSteps.map((step, index) => (
-            <article key={step.title} className="process-card">
-              <span className="process-step">0{index + 1}</span>
-              <h3>{step.title}</h3>
-              <p>{step.description}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="section section-alt">
+      <section className="section section-alt home-team-section">
         <SectionHeading
           eyebrow="Team"
           title="A care-obsessed team at your side"
@@ -487,7 +535,12 @@ export function HomeClient() {
           {team.map((member) => (
             <article key={member.name} className="team-card">
               <div className="team-image">
-                <Image src={member.image} alt={member.name} fill sizes="(max-width: 900px) 100vw, 33vw" />
+                <Image
+                  src={member.image}
+                  alt={member.name}
+                  fill
+                  sizes="(max-width: 900px) 100vw, 33vw"
+                />
               </div>
               <div>
                 <h3>{member.name}</h3>
@@ -501,7 +554,7 @@ export function HomeClient() {
         </div>
       </section>
 
-      <section className="section">
+      {/* <section className="section">
         <SectionHeading
           eyebrow="Testimonials"
           title="Teams see immediate operational lift"
@@ -519,9 +572,9 @@ export function HomeClient() {
             </article>
           ))}
         </div>
-      </section>
+      </section> */}
 
-      <section className="section section-alt">
+      {/* <section className="section section-alt home-team-section">
         <SectionHeading
           eyebrow="Blog"
           title="Latest playbooks for growth-minded practices"
@@ -539,12 +592,7 @@ export function HomeClient() {
             </article>
           ))}
         </div>
-      </section>
+      </section> */}
     </main>
   );
 }
-
-
-
-
-

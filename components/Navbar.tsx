@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -403,7 +403,7 @@ export function Navbar() {
         </div>
       </div>
 
-      <div ref={menuRef} className="mobile-menu" aria-hidden={!open}>
+      <div ref={menuRef} className="mobile-menu" aria-hidden={!open} data-open={open}>
         <Link className="mobile-link" href="/" onClick={() => setOpen(false)}>
           Home
         </Link>
@@ -529,3 +529,4 @@ export function Navbar() {
     </header>
   );
 }
+

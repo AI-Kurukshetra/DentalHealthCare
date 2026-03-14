@@ -1,4 +1,4 @@
-export const navLinks = [
+﻿export const navLinks = [
   { label: 'Features', href: '/features' },
   { label: 'Services', href: '/services' },
   { label: 'Team', href: '/team' },
@@ -29,17 +29,17 @@ export const team = [
   {
     name: 'Dr. Mia Stone',
     role: 'Clinical Director',
-    image: '/images/team-1.svg'
+    image: 'https://images.pexels.com/photos/6627836/pexels-photo-6627836.jpeg?cs=srgb&dl=pexels-karola-g-6627836.jpg&fm=jpg'
   },
   {
     name: 'Dr. Amir Patel',
     role: 'Orthodontics Lead',
-    image: '/images/team-2.svg'
+    image: 'https://images.pexels.com/photos/6812467/pexels-photo-6812467.jpeg?cs=srgb&dl=pexels-pavel-danilyuk-6812467.jpg&fm=jpg'
   },
   {
     name: 'Sofia Ramos',
     role: 'Operations Manager',
-    image: '/images/team-3.svg'
+    image: 'https://images.pexels.com/photos/4971503/pexels-photo-4971503.jpeg?cs=srgb&dl=pexels-gustavo-fring-4971503.jpg&fm=jpg'
   }
 ];
 
@@ -81,19 +81,22 @@ export const featureList = [
     title: 'Patient Management System',
     description:
       'Complete patient profiles with medical history, contact information, insurance details, and treatment records.',
-    iconKey: 'patients'
+    iconKey: 'patients',
+    image: '/images/img.jpeg'
   },
   {
     title: 'Appointment Scheduling',
     description:
       'Drag-and-drop calendar with multi-provider support, recurring appointments, and availability management.',
-    iconKey: 'schedule'
+    iconKey: 'schedule',
+    image: '/images/img1.jpg'
   },
   {
     title: 'Billing & Insurance',
     description:
       'Integrated claims, estimates, and payments with automated insurance eligibility checks.',
-    iconKey: 'billing'
+    iconKey: 'billing',
+    image: '/images/img.png'
   }
 ];
 
@@ -117,6 +120,9 @@ export const blogFallback = [
     tag: 'Finance'
   }
 ];
+
+
+
 
 
 

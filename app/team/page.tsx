@@ -1,33 +1,17 @@
-import Image from 'next/image';
+﻿import Image from 'next/image';
 import Link from 'next/link';
 import { Facebook, Instagram, Twitter } from 'lucide-react';
+import { team } from '../../lib/content';
 
-const teamProfiles = [
-  {
-    name: 'Alex Turner',
-    role: 'Clinical Director',
-    seed: 'alex-turner',
-    bio: 'Leads complex treatment planning and keeps clinical standards consistent across every patient visit.'
-  },
-  {
-    name: 'Andrea Hayes',
-    role: 'Orthodontist',
-    seed: 'andrea-hayes',
-    bio: 'Designs alignment journeys with a calm, detail-first approach focused on long-term smile health.'
-  },
-  {
-    name: 'Brandon Fuller',
-    role: 'Hygienist',
-    seed: 'brandon-fuller',
-    bio: 'Works with patients on preventive care, hygiene routines, and comfortable in-chair education.'
-  },
-  {
-    name: 'Elizabeth Welsh',
-    role: 'Dentist',
-    seed: 'elizabeth-welsh',
-    bio: 'Blends restorative precision with friendly communication so each appointment feels clear and reassuring.'
-  }
-] as const;
+const teamProfiles = team.map((member, index) => ({
+  ...member,
+  bio:
+    [
+      'Leads treatment planning and keeps every patient journey clinically consistent from first consult to follow-up.',
+      'Designs alignment and restorative plans with a calm, detail-first approach focused on long-term smile health.',
+      'Coordinates operations, scheduling, and patient communication so every visit feels clear and well supported.'
+    ][index] || 'Supports the clinic with modern care coordination and patient-first communication.'
+}));
 
 const socialLinks = [
   {
@@ -46,9 +30,6 @@ const socialLinks = [
     icon: Instagram
   }
 ] as const;
-
-const buildSeedAvatar = (seed: string) =>
-  `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(seed)}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`;
 
 export default function TeamPage() {
   return (
@@ -85,12 +66,7 @@ export default function TeamPage() {
             <article key={member.name} className="team-profile-card">
               <div className="team-profile-photo-shell">
                 <div className="team-profile-photo">
-                  <Image
-                    src={buildSeedAvatar(member.seed)}
-                    alt={member.name}
-                    fill
-                    sizes="(max-width: 900px) 100vw, 25vw"
-                  />
+                  <Image src={member.image} alt={member.name} fill sizes="(max-width: 900px) 100vw, 25vw" />
                 </div>
               </div>
               <div className="team-profile-copy">
